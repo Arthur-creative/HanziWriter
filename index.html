@@ -243,48 +243,48 @@
             </div>
         </div>
 
-        <!-- 按鈕群 -->
+        <!-- 按鈕群 (整合暫停/繼續至快寫與慢寫按鈕，均分為 3 個按鈕) -->
         <div id="control-buttons-group" class="w-full max-w-[360px] grid grid-cols-3 gap-2">
-            <button id="btn-animate" onclick="animateCharacter()" 
-                class="btn-3d bg-child-blue text-white font-black py-2.5 px-2 rounded-2xl border-2 border-blue-700 flex flex-col items-center justify-center text-xs sm:text-sm gap-1 shadow-md">
-                <i class="fa-solid fa-circle-play text-base"></i> 播放筆順
+            <button id="btn-slow" onclick="toggleSpeedPlay(0.4)" 
+                class="btn-3d bg-sky-200 text-black font-black h-12 rounded-xl border border-sky-300 flex items-center justify-center gap-1.5 text-xs sm:text-sm">
+                <i id="icon-slow" class="fa-solid fa-play text-xs"></i> 跟寫
             </button>
-            <button id="btn-toggle" onclick="toggleAnimation()" 
-                class="btn-3d bg-child-orange text-white font-black py-2.5 px-2 rounded-2xl border-2 border-orange-600 flex flex-col items-center justify-center text-xs sm:text-sm gap-1 shadow-md">
-                <i id="icon-toggle" class="fa-solid fa-pause text-base"></i> 暫停/繼續
+            <button id="btn-fast" onclick="toggleSpeedPlay(1)" 
+                class="btn-3d bg-sky-200 text-black font-black h-12 rounded-xl border border-sky-300 flex items-center justify-center gap-1.5 text-xs sm:text-sm">
+                <i id="icon-fast" class="fa-solid fa-play text-xs"></i> 示範
             </button>
             <button id="btn-clear" onclick="clearUserCanvas()" 
-                class="btn-3d bg-child-pink text-white font-black py-2.5 px-2 rounded-2xl border-2 border-pink-600 flex flex-col items-center justify-center text-xs sm:text-sm gap-1 shadow-md">
-                <i class="fa-solid fa-eraser text-base"></i> 清除筆跡
+                class="btn-3d bg-child-green text-black font-black h-12 rounded-xl border border-teal-600 flex items-center justify-center text-xs sm:text-sm">
+                清除筆跡
             </button>
         </div>
 
-        <!-- 速度與顏色粗細選單 -->
-        <div id="settings-menu-group" class="w-full max-w-[360px] bg-slate-100 p-3 rounded-2xl border border-slate-200 flex flex-col gap-2 transition-all">
-            <div class="flex items-center justify-between pb-2 border-b border-slate-200/80 px-1">
-                <span class="text-xs font-bold text-slate-700">筆順速度:</span>
-                <div class="flex items-center gap-1.5">
-                    <span class="text-xs font-bold text-slate-700">慢快:</span>
-                    <input type="range" id="speed-slider" min="0.25" max="1" step="0.25" value="1" 
-                        class="w-20 accent-child-blue bg-slate-800 rounded-lg cursor-pointer h-2">
-                </div>
+        <!-- 筆畫調整選單 (恢復單行佈局) -->
+        <div id="settings-menu-group" class="w-full max-w-[360px] bg-slate-100 p-2.5 rounded-2xl border border-slate-200 flex items-center justify-between transition-all">
+            <span class="text-xs font-black text-slate-700 shrink-0">筆畫調整:</span>
+            
+            <!-- 顏色選擇器 -->
+            <div class="flex gap-1.5 items-center shrink-0" id="color-picker-group">
+                <button onclick="setBrushColor('#5271FF', this)" class="color-btn w-6 h-6 rounded-full bg-[#5271FF] border-2 border-white shadow-sm ring-2 ring-slate-900 transition-all"></button>
+                <button onclick="setBrushColor('#E53E3E', this)" class="color-btn w-6 h-6 rounded-full bg-[#E53E3E] border-2 border-white shadow-sm transition-all"></button>
+                <button onclick="setBrushColor('#FFDE59', this)" class="color-btn w-6 h-6 rounded-full bg-[#FFDE59] border-2 border-white shadow-sm transition-all"></button>
+                <button onclick="setBrushColor('#00C2CB', this)" class="color-btn w-6 h-6 rounded-full bg-[#00C2CB] border-2 border-white shadow-sm transition-all"></button>
             </div>
 
-            <div class="flex items-center justify-between px-1">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-bold text-slate-700">畫筆顏色:</span>
-                    <div class="flex gap-1.5" id="color-picker-group">
-                        <button onclick="setBrushColor('#5271FF', this)" class="color-btn w-6 h-6 rounded-full bg-[#5271FF] border-2 border-white shadow-sm ring-2 ring-slate-900 transition-all"></button>
-                        <button onclick="setBrushColor('#E53E3E', this)" class="color-btn w-6 h-6 rounded-full bg-[#E53E3E] border-2 border-white shadow-sm transition-all"></button>
-                        <button onclick="setBrushColor('#FFDE59', this)" class="color-btn w-6 h-6 rounded-full bg-[#FFDE59] border-2 border-white shadow-sm transition-all"></button>
-                        <button onclick="setBrushColor('#00C2CB', this)" class="color-btn w-6 h-6 rounded-full bg-[#00C2CB] border-2 border-white shadow-sm transition-all"></button>
-                    </div>
-                </div>
-                <div class="flex items-center gap-1.5">
-                    <span class="text-xs font-bold text-child-pink">粗細:</span>
-                    <input type="range" id="brush-size" min="6" max="24" value="12" 
-                        class="w-20 accent-child-pink bg-slate-200 rounded-lg cursor-pointer h-2">
-                </div>
+            <!-- 三段粗細按鈕 (細、中、粗 線條示意圖) -->
+            <div class="flex gap-1.5 items-center shrink-0" id="size-picker-group">
+                <!-- 細 -->
+                <button onclick="setBrushSize(6, this)" title="細筆畫" class="size-btn w-7 h-7 rounded-full bg-white border border-slate-300 flex items-center justify-center shadow-sm transition-all">
+                    <div class="w-4 h-[2px] bg-slate-800 rounded-full"></div>
+                </button>
+                <!-- 中 (預設選取) -->
+                <button onclick="setBrushSize(12, this)" title="中筆畫" class="size-btn w-7 h-7 rounded-full bg-white border border-slate-300 flex items-center justify-center shadow-sm ring-2 ring-slate-900 transition-all">
+                    <div class="w-4 h-[4px] bg-slate-800 rounded-full"></div>
+                </button>
+                <!-- 粗 -->
+                <button onclick="setBrushSize(20, this)" title="粗筆畫" class="size-btn w-7 h-7 rounded-full bg-white border border-slate-300 flex items-center justify-center shadow-sm transition-all">
+                    <div class="w-4 h-[7px] bg-slate-800 rounded-full"></div>
+                </button>
             </div>
         </div>
     </main>
@@ -420,16 +420,6 @@
                 syncCloudVault();
                 listenLeaderboard();
             };
-
-            const speedSlider = document.getElementById('speed-slider');
-            speedSlider.addEventListener('input', (e) => {
-                strokeSpeed = parseFloat(e.target.value);
-                if (currentChar) loadCharacter(currentChar);
-            });
-
-            document.getElementById('brush-size').addEventListener('input', (e) => {
-                brushSize = parseInt(e.target.value);
-            });
         };
 
         // 頁籤切換控制
@@ -454,11 +444,7 @@
                 const isChallenge = currentTab === 'challenge';
                 toggleChallengeUIDisabled(isChallenge);
 
-                if (currentTab === 'practice') {
-                    updateFeedback('觀看「筆順示範」或用彩筆自由描紅喔！');
-                } else {
-                    updateFeedback('挑戰寫出正確筆順，解鎖成就字庫！');
-                }
+                updatePromptByInput();
                 clearAllContent();
             } else if (currentTab === 'competition') {
                 document.getElementById('tab-competition-view').classList.remove('hidden');
@@ -470,19 +456,22 @@
 
         // 停用/啟用挑戰模式時的功能按鈕與選單
         function toggleChallengeUIDisabled(disabled) {
-            const btnAnimate = document.getElementById('btn-animate');
-            const btnToggle = document.getElementById('btn-toggle');
+            const btnFast = document.getElementById('btn-fast');
+            const btnSlow = document.getElementById('btn-slow');
             const btnClear = document.getElementById('btn-clear');
-            const speedSlider = document.getElementById('speed-slider');
-            const brushSize = document.getElementById('brush-size');
             const settingsGroup = document.getElementById('settings-menu-group');
             const colorBtns = document.querySelectorAll('#color-picker-group button');
+            const sizeBtns = document.querySelectorAll('#size-picker-group button');
 
-            [btnAnimate, btnToggle, btnClear, speedSlider, brushSize].forEach(el => {
+            [btnFast, btnSlow, btnClear].forEach(el => {
                 if (el) el.disabled = disabled;
             });
 
             colorBtns.forEach(btn => {
+                btn.disabled = disabled;
+                btn.style.pointerEvents = disabled ? 'none' : 'auto';
+            });
+            sizeBtns.forEach(btn => {
                 btn.disabled = disabled;
                 btn.style.pointerEvents = disabled ? 'none' : 'auto';
             });
@@ -498,12 +487,15 @@
 
         // 載入漢字
         function loadCharacter(char) {
-            if (!char) return;
+            if (!char) {
+                updatePromptByInput();
+                return;
+            }
 
             // 檢查是否為標準中文字元
             const isChineseChar = /^[\u4e00-\u9fa5]$/.test(char);
             if (!isChineseChar) {
-                updateFeedback('⚠️ 請輸入單一標準漢字（例如：永、福）喔！', 'text-child-pink');
+                updateFeedback('請輸入一個標準漢字。', 'text-child-pink');
                 return;
             }
 
@@ -513,6 +505,7 @@
             container.innerHTML = '';
             writer = null;
             initWriter(char);
+            updatePromptByInput();
         }
 
         function initWriter(char) {
@@ -539,12 +532,12 @@
                     },
                     onMistake: function() {
                         if (currentTab === 'challenge') {
-                            updateFeedback('哎呀！筆順或方向錯囉，重試看看！', 'text-child-orange');
+                            updateFeedback(' 哎呀! 筆順錯囉，請再試試!', 'text-child-orange');
                         }
                     },
                     onComplete: function() {
                         if (currentTab === 'challenge') {
-                            updateFeedback('🎉 恭喜挑戰成功！已存入成就字庫！', 'text-child-blue');
+                            updateFeedback('恭喜你，挑戰成功! 已存入字庫。', 'text-child-blue');
                             saveToVault(currentChar);
                             handleQuizSuccessEffects();
                         }
@@ -740,12 +733,31 @@
         function handleInputChar(val) {
             const trimmed = val.trim();
             if (trimmed.length > 0) {
-                loadCharacter(trimmed.charAt(trimmed.length - 1));
+                const char = trimmed.charAt(trimmed.length - 1);
+                loadCharacter(char);
+            } else {
+                updatePromptByInput();
+            }
+        }
+
+        function updatePromptByInput() {
+            const val = document.getElementById('char-input').value.trim();
+            const isChinese = /^[\u4e00-\u9fa5]$/.test(val);
+
+            if (!val || !isChinese) {
+                updateFeedback('請輸入一個標準漢字。');
+            } else {
+                if (currentTab === 'practice') {
+                    updateFeedback('請點擊「跟寫」或「示範」練習筆順喔!');
+                } else if (currentTab === 'challenge') {
+                    updateFeedback('請開始筆順挑戰吧!');
+                }
             }
         }
 
         function resizeCanvas() {
             const container = document.getElementById('grid-container');
+            if (!container || !canvas) return;
             const rect = container.getBoundingClientRect();
             canvas.width = rect.width;
             canvas.height = rect.height;
@@ -758,77 +770,97 @@
             document.getElementById('character-target').innerHTML = '';
             clearUserCanvas();
             writer = null;
+            updatePromptByInput();
+        }
+
+        function resizeCanvas() {
+            const container = document.getElementById('grid-container');
+            if (!container || !canvas) return;
+            const rect = container.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            clearUserCanvas();
         }
 
         function animateCharacter() {
             if (!writer) return;
             isPaused = false;
             isAnimating = true;
-            updateToggleBtnIcon(false);
-            setSpeedSliderDisabled(true);
+            updateSpeedBtnIcons();
             writer.animateCharacter({ 
                 onComplete: () => {
                     isPaused = false;
                     isAnimating = false;
-                    updateToggleBtnIcon(false);
-                    setSpeedSliderDisabled(false);
+                    updateSpeedBtnIcons();
                     speakCharacter(); // 筆順播放完畢後自動發音一次
                 } 
             });
         }
 
-        function toggleAnimation() {
+        // 整合點擊「慢寫」與「快寫」按鈕的播放與暫停邏輯
+        function toggleSpeedPlay(speed) {
             if (!writer) return;
-            
-            // 情況 1: 若處於暫停狀態 -> 呼叫 resumeAnimation() 從暫停點繼續播放到完畢
-            if (isPaused) {
-                writer.resumeAnimation();
-                isPaused = false;
-                isAnimating = true;
-                updateToggleBtnIcon(false);
-                setSpeedSliderDisabled(true);
-                return;
-            }
 
-            // 情況 2: 若正在播放中 -> 呼叫 pauseAnimation() 暫停在當前畫面
-            if (isAnimating) {
+            const isSameSpeed = (strokeSpeed === speed);
+
+            // 狀況 1: 若點擊同一個速度按鈕且目前正在播放中 -> 暫停播放
+            if (isSameSpeed && isAnimating && !isPaused) {
                 writer.pauseAnimation();
                 isPaused = true;
                 isAnimating = false;
-                updateToggleBtnIcon(true);
-                setSpeedSliderDisabled(false);
+                updateSpeedBtnIcons();
                 return;
             }
 
-            // 情況 3: 若完全靜止且未播放 -> 從頭開始播放動畫
-            animateCharacter();
-        }
+            // 狀況 2: 若點擊同一個速度按鈕且目前處於暫停狀態 -> 繼續播放
+            if (isSameSpeed && isPaused) {
+                writer.resumeAnimation();
+                isPaused = false;
+                isAnimating = true;
+                updateSpeedBtnIcons();
+                return;
+            }
 
-        function updateToggleBtnIcon(paused) {
-            const icon = document.getElementById('icon-toggle');
-            if (icon) {
-                if (paused) {
-                    icon.className = 'fa-solid fa-play text-base';
-                } else {
-                    icon.className = 'fa-solid fa-pause text-base';
-                }
+            // 狀況 3: 切換不同速度或未播放狀態 -> 載入並開始新速度播放
+            strokeSpeed = speed;
+            isPaused = false;
+            if (currentChar) {
+                loadCharacter(currentChar);
+                setTimeout(() => {
+                    animateCharacter();
+                }, 100);
             }
         }
 
-        function setSpeedSliderDisabled(disabled) {
-            const speedSlider = document.getElementById('speed-slider');
-            speedSlider.disabled = disabled;
-            if (disabled) speedSlider.classList.add('opacity-50', 'cursor-not-allowed');
-            else speedSlider.classList.remove('opacity-50', 'cursor-not-allowed');
+        // 更新慢寫與快寫按鈕的播放/暫停圖示 (▶ / ❚❚)
+        function updateSpeedBtnIcons() {
+            const iconSlow = document.getElementById('icon-slow');
+            const iconFast = document.getElementById('icon-fast');
+
+            if (!iconSlow || !iconFast) return;
+
+            // 先全部還原為播放圖示 (▶)
+            iconSlow.className = 'fa-solid fa-play text-xs';
+            iconFast.className = 'fa-solid fa-play text-xs';
+
+            // 若目前正在播放中，將當前速度的按鈕切換為暫停圖示 (❚❚)
+            if (isAnimating && !isPaused) {
+                if (strokeSpeed === 0.4) {
+                    iconSlow.className = 'fa-solid fa-pause text-xs';
+                } else if (strokeSpeed === 1) {
+                    iconFast.className = 'fa-solid fa-pause text-xs';
+                }
+            }
         }
 
         function initDrawingListeners() {
             const getPos = (e) => {
                 const rect = canvas.getBoundingClientRect();
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
                 return { x: clientX - rect.left, y: clientY - rect.top };
             };
+
             const startDraw = (e) => {
                 if (currentTab !== 'practice') return;
                 isDrawing = true;
@@ -838,23 +870,33 @@
                 ctx.strokeStyle = brushColor;
                 ctx.lineWidth = brushSize;
                 ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
             };
+
             const draw = (e) => {
                 if (!isDrawing || currentTab !== 'practice') return;
-                e.preventDefault();
+                if (e.cancelable) e.preventDefault();
                 const pos = getPos(e);
                 ctx.lineTo(pos.x, pos.y);
                 ctx.stroke();
             };
-            const stopDraw = () => { isDrawing = false; };
+
+            const stopDraw = () => { 
+                if (isDrawing) {
+                    ctx.closePath();
+                    isDrawing = false; 
+                }
+            };
 
             canvas.addEventListener('mousedown', startDraw);
             canvas.addEventListener('mousemove', draw);
             canvas.addEventListener('mouseup', stopDraw);
             canvas.addEventListener('mouseleave', stopDraw);
+
             canvas.addEventListener('touchstart', startDraw, { passive: false });
             canvas.addEventListener('touchmove', draw, { passive: false });
             canvas.addEventListener('touchend', stopDraw);
+            canvas.addEventListener('touchcancel', stopDraw);
         }
 
         function setBrushColor(color, btnEl) {
@@ -863,58 +905,26 @@
             if (btnEl) btnEl.classList.add('ring-2', 'ring-slate-900');
         }
 
-        function clearUserCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function setBrushSize(size, btnEl) {
+            brushSize = size;
+            document.querySelectorAll('#size-picker-group .size-btn').forEach(b => b.classList.remove('ring-2', 'ring-slate-900'));
+            if (btnEl) btnEl.classList.add('ring-2', 'ring-slate-900');
         }
 
-        function speakCharacter() {
-            if ('speechSynthesis' in window && currentChar) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(currentChar);
-                utterance.lang = 'zh-TW';
-                utterance.rate = 0.6; // 發音速度放慢 25%
-                window.speechSynthesis.speak(utterance);
+        function clearUserCanvas() {
+            if (ctx && canvas) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
         }
 
-        function handleQuizSuccessEffects() {
-            const charContainer = document.getElementById('character-target');
-            if (!charContainer) return;
-            charContainer.classList.remove('stroke-blink-once');
-            void charContainer.offsetWidth;
-            charContainer.classList.add('stroke-blink-once');
-
-            setTimeout(() => {
-                charContainer.classList.remove('stroke-blink-once');
-                createConfettiExplosion('25%', '25%');
-                setTimeout(() => {
-                    createConfettiExplosion('75%', '75%');
-                    speakCharacter();
-                }, 300);
-            }, 1200);
-        }
-
-        function createConfettiExplosion(originLeft = '50%', originTop = '50%') {
-            const gridContainer = document.getElementById('grid-container');
-            if (!gridContainer) return;
-            const colors = ['#FF4aba', '#FFDE59', '#415acc', '#1bd2b2', '#FF914D'];
-            for (let i = 0; i < 25; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti-particle';
-                const color = colors[Math.floor(Math.random() * colors.length)];
-                const size = Math.random() * 8 + 6;
-                confetti.style.width = `${size}px`;
-                confetti.style.height = `${size}px`;
-                confetti.style.backgroundColor = color;
-                confetti.style.left = originLeft;
-                confetti.style.top = originTop;
-                const angle = Math.random() * Math.PI * 2;
-                const distance = Math.random() * 100 + 30;
-                confetti.style.setProperty('--tx', `${Math.cos(angle) * distance}px`);
-                confetti.style.setProperty('--ty', `${Math.sin(angle) * distance + 20}px`);
-                confetti.style.setProperty('--rot', `${(Math.random() - 0.5) * 720}deg`);
-                gridContainer.appendChild(confetti);
-                setTimeout(() => confetti.remove(), 1200);
+        function speakCharacter() {
+            const char = currentChar || document.getElementById('char-input').value.trim() || '永';
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // 停止先前發音
+                const utterance = new SpeechSynthesisUtterance(char);
+                utterance.lang = 'zh-TW';
+                utterance.rate = 0.75; // 稍微放慢速度適合兒童聽讀
+                window.speechSynthesis.speak(utterance);
             }
         }
 
@@ -922,9 +932,38 @@
             const fbText = document.getElementById('feedback-text');
             if (fbText) {
                 fbText.innerText = text;
-                fbText.className = `text-sm sm:text-base font-black ${colorClass} tracking-wide`;
+                fbText.className = `text-sm sm:text-base font-black tracking-wide ${colorClass}`;
             }
         }
+
+        function handleQuizSuccessEffects() {
+            // 慶祝效果 (粒子動畫)
+            const target = document.getElementById('grid-container');
+            if (!target) return;
+            const colors = ['#FFDE59', '#FF4aba', '#415acc', '#1bd2b2', '#FF914D'];
+            for (let i = 0; i < 24; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'confetti-particle';
+                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.left = '50%';
+                particle.style.top = '50%';
+                particle.style.width = `${Math.random() * 8 + 6}px`;
+                particle.style.height = `${Math.random() * 8 + 6}px`;
+                const tx = (Math.random() - 0.5) * 260;
+                const ty = (Math.random() - 0.5) * 260;
+                const rot = Math.random() * 360;
+                particle.style.setProperty('--tx', `${tx}px`);
+                particle.style.setProperty('--ty', `${ty}px`);
+                particle.style.setProperty('--rot', `${rot}deg`);
+                target.appendChild(particle);
+                setTimeout(() => particle.remove(), 1200);
+            }
+            speakCharacter();
+        }
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+        });
     </script>
 </body>
 </html>
