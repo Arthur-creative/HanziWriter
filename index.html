@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>漢字筆順學習大挑戰網頁</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Hanzi Writer CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Playful font -->
+    <link href="https://fonts.googleapis.com/css2?family=Mochiyom+Pop+One&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+    <!-- Tone.js for Web Audio SFX -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Config
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'hanzi-learning-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "demo-api-key",
+            authDomain: "demo-app.firebaseapp.com",
+            projectId: "demo-app",
+            storageBucket: "demo-app.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:demo"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        window.db = db;
+        window.auth = auth;
+        window.appId = appId;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.setDoc = setDoc;
+        window.updateDoc = updateDoc;
+        window.arrayUnion = arrayUnion;
+        window.collection = collection;
+        window.onSnapshot = onSnapshot;
+
+        // 初始化登入狀態
+        window.initAuth = async function() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch(e) {
+                console.warn("Auth initialization fallback:", e);
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.currentUser = user;
+                if (window.onUserLogin) window.onUserLogin(user);
+            }
+        });
+    </script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'child-yellow': '#FFDE59',
+                        'child-pink': '#FF4aba',
+                        'child-blue': '#415acc',
+                        'child-green': '#1bd2b2',
+                        'child-orange': '#FF914D',
+                        'grid-red': '#E53E3E',
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans TC', 'sans-serif'],
+                        fun: ['Mochiyom Pop One', 'Noto Sans TC', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #F8F9FA;
+            background-image: radial-gradient(#E2E8F0 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* 米字格背景 CSS */
+        .mi-zi-ge {
+            position: relative;
+            background-color: #FAF6EE;
+            background-image: 
+                radial-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+                radial-gradient(rgba(180, 150, 100, 0.04) 1px, transparent 1px);
+            background-size: 8px 8px, 12px 12px;
+            border: 4px solid #E53E3E;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(229, 62, 62, 0.2), 0 8px 10px -6px rgba(229, 62, 62, 0.2);
+        }
+
+        .mi-zi-ge::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                linear-gradient(to right, transparent calc(50% - 1px), rgba(229, 62, 62, 0.4) 50%, transparent calc(50% + 1px)),
+                linear-gradient(to bottom, transparent calc(50% - 1px), rgba(229, 62, 62, 0.4) 50%, transparent calc(50% + 1px)),
+                linear-gradient(45deg, transparent calc(50% - 0.5px), rgba(229, 62, 62, 0.25) 50%, transparent calc(50% + 0.5px)),
+                linear-gradient(-45deg, transparent calc(50% - 0.5px), rgba(229, 62, 62, 0.25) 50%, transparent calc(50% + 0.5px));
+            pointer-events: none;
+            border-radius: 1.2rem;
+        }
+
+        #character-target svg {
+            display: block;
+            margin: auto;
+        }
+
+        #user-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 10;
+            touch-action: none;
+            border-radius: 1.2rem;
+        }
+
+        .btn-3d {
+            transition: all 0.08s ease;
+            box-shadow: 0 4px 0 0 #cbd5e1;
+        }
+        .btn-3d:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 0 0 #94a3b8;
+        }
+        .btn-3d:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 0 #94a3b8;
+        }
+
+        @keyframes strokeBlinkOnce {
+            0%, 100% { fill: #2C3E50; stroke: #2C3E50; }
+            50% { fill: #E53E3E; stroke: #E53E3E; }
+        }
+
+        .stroke-blink-once path {
+            animation: strokeBlinkOnce 1.2s ease-in-out 1;
+        }
+
+        .confetti-particle {
+            position: absolute;
+            pointer-events: none;
+            z-index: 30;
+            border-radius: 2px;
+            animation: confettiFall 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes confettiFall {
+            0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+            100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.4); }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between p-2 sm:p-4 font-sans max-w-2xl mx-auto">
+
+    <!-- 頂部用戶帳號與分頁導覽 -->
+    <header class="w-full text-center mb-2 shrink-0">
+        <div class="flex items-center justify-between bg-white px-4 py-2 rounded-2xl shadow-md border border-slate-200 mb-2">
+            <h1 class="text-base sm:text-xl font-black text-child-blue tracking-wide flex items-center gap-1.5">
+                <span>✏️</span> 漢字筆順大挑戰
+            </h1>
+            <div id="user-info" class="flex items-center gap-2">
+                <span id="user-display" class="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full border border-slate-200">
+                    👤 訪客模式
+                </span>
+            </div>
+        </div>
+
+        <!-- 四大主分頁選單按鈕 -->
+        <nav class="grid grid-cols-4 gap-1.5 sm:gap-2.5">
+            <button onclick="switchTab('tab-practice')" id="nav-practice" 
+                class="tab-btn btn-3d py-3 px-1 rounded-xl font-black text-sm sm:text-base bg-child-blue text-white border border-blue-600 flex items-center justify-center gap-1">
+                <span>🏠</span> 練習
+            </button>
+            <button onclick="switchTab('tab-challenge')" id="nav-challenge" 
+                class="tab-btn btn-3d py-3 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1">
+                <span>🎯</span> 挑戰
+            </button>
+            <button onclick="switchTab('tab-competition')" id="nav-competition" 
+                class="tab-btn btn-3d py-3 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1">
+                <span>⚔️</span> 競賽
+            </button>
+            <button onclick="switchTab('tab-vault')" id="nav-vault" 
+                class="tab-btn btn-3d py-3 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1">
+                <span>🏆</span> 字庫
+            </button>
+        </nav>
+    </header>
+
+    <!-- 1 & 2. 筆順練習 / 筆順挑戰 主要區域 -->
+    <main id="main-learning-view" class="w-full bg-white p-3 sm:p-5 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col items-center justify-center my-auto gap-3">
+        
+        <!-- 輸入欄與功能區 (垂直置中排版) -->
+        <div class="w-full flex items-center justify-center gap-2.5 p-2 bg-slate-50 rounded-2xl border border-slate-200">
+            <div class="flex-1 max-w-[200px]">
+                <input type="text" id="char-input" maxlength="1" placeholder="輸入單字" 
+                    class="w-full text-center text-2xl font-black border-2 border-child-blue rounded-xl p-1 bg-blue-50/30 text-child-blue focus:outline-none focus:ring-2 focus:ring-child-blue shadow-inner h-12"
+                    oninput="handleInputChar(this.value)">
+            </div>
+
+            <div class="flex gap-1 shrink-0">
+                <button onclick="clearAllContent()" title="清除"
+                    class="btn-3d bg-child-green text-slate-900 font-black px-4 py-2 h-12 rounded-xl border border-teal-600 text-sm sm:text-base flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-trash-can text-base sm:text-lg"></i>清除
+                </button>
+            </div>
+        </div>
+
+        <!-- 提示卡片 -->
+        <div id="feedback-card" class="w-full bg-blue-100 border-2 border-child-blue/40 rounded-2xl py-2 px-4 text-center shadow-sm">
+            <p id="feedback-text" class="text-sm sm:text-base font-black text-child-blue tracking-wide">
+                點擊「播放筆順」觀看漢字怎麼寫喔！
+            </p>
+        </div>
+
+        <!-- 米字格畫布 (垂直置中) -->
+        <div class="relative w-full max-w-[320px] sm:max-w-[360px] aspect-square flex items-center justify-center my-1">
+            <div id="grid-container" class="mi-zi-ge w-full h-full relative overflow-hidden flex items-center justify-center">
+                <div id="character-target" class="w-full h-full flex items-center justify-center"></div>
+                <canvas id="user-canvas"></canvas>
+            </div>
+        </div>
+
+        <!-- 按鈕群 -->
+        <div id="control-buttons-group" class="w-full max-w-[360px] grid grid-cols-3 gap-2">
+            <button id="btn-animate" onclick="animateCharacter()" 
+                class="btn-3d bg-child-blue text-white font-black py-2.5 px-2 rounded-2xl border-2 border-blue-700 flex flex-col items-center justify-center text-xs sm:text-sm gap-1 shadow-md">
+                <i class="fa-solid fa-circle-play text-base"></i> 播放筆順
+            </button>
+            <button id="btn-toggle" onclick="toggleAnimation()" 
+                class="btn-3d bg-child-orange text-white font-black py-2.5 px-2 rounded-2xl border-2 border-orange-600 flex flex-col items-center justify-center text-xs sm:text-sm gap-1 shadow-md">
+                <i id="icon-toggle" class="fa-solid fa-pause text-base"></i> 暫停/繼續
+            </button>
+            <button id="btn-clear" onclick="clearUserCanvas()" 
+                class="btn-3d bg-child-pink text-white font-black py-2.5 px-2 rounded-2xl border-2 border-pink-600 flex flex-col items-center justify-center text-xs sm:text-sm gap-1 shadow-md">
+                <i class="fa-solid fa-eraser text-base"></i> 清除筆跡
+            </button>
+        </div>
+
+        <!-- 速度與顏色粗細選單 -->
+        <div id="settings-menu-group" class="w-full max-w-[360px] bg-slate-100 p-3 rounded-2xl border border-slate-200 flex flex-col gap-2 transition-all">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-200/80 px-1">
+                <span class="text-xs font-bold text-slate-700">筆順速度:</span>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-bold text-slate-700">慢快:</span>
+                    <input type="range" id="speed-slider" min="0.25" max="1" step="0.25" value="1" 
+                        class="w-20 accent-child-blue bg-slate-800 rounded-lg cursor-pointer h-2">
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between px-1">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-slate-700">畫筆顏色:</span>
+                    <div class="flex gap-1.5" id="color-picker-group">
+                        <button onclick="setBrushColor('#5271FF', this)" class="color-btn w-6 h-6 rounded-full bg-[#5271FF] border-2 border-white shadow-sm ring-2 ring-slate-900 transition-all"></button>
+                        <button onclick="setBrushColor('#E53E3E', this)" class="color-btn w-6 h-6 rounded-full bg-[#E53E3E] border-2 border-white shadow-sm transition-all"></button>
+                        <button onclick="setBrushColor('#FFDE59', this)" class="color-btn w-6 h-6 rounded-full bg-[#FFDE59] border-2 border-white shadow-sm transition-all"></button>
+                        <button onclick="setBrushColor('#00C2CB', this)" class="color-btn w-6 h-6 rounded-full bg-[#00C2CB] border-2 border-white shadow-sm transition-all"></button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-bold text-child-pink">粗細:</span>
+                    <input type="range" id="brush-size" min="6" max="24" value="12" 
+                        class="w-20 accent-child-pink bg-slate-200 rounded-lg cursor-pointer h-2">
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 3. 筆順競賽分頁 (隱藏狀態) -->
+    <div id="tab-competition-view" class="hidden w-full bg-white p-3 sm:p-5 pt-0 sm:pt-1 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col gap-4">
+        <div class="bg-gradient-to-r from-orange-400 to-amber-500 p-3 rounded-2xl text-white text-center shadow-md">
+            <h2 class="text-lg font-black tracking-wide">⚔️ 筆順全能競賽</h2>
+            <p class="text-xs mt-1 opacity-95">零容錯挑戰！選擇等級區域開始！</p>
+        </div>
+
+        <!-- 等級選擇器 -->
+        <div id="comp-level-selector" class="flex justify-center gap-2">
+            <button onclick="startCompetition('easy')" class="btn-3d bg-emerald-500 text-white font-bold py-2 px-3 rounded-xl text-xs">🌱 初級 (常用字)</button>
+            <button onclick="startCompetition('medium')" class="btn-3d bg-blue-500 text-white font-bold py-2 px-3 rounded-xl text-xs">⭐ 中級 (進階字)</button>
+            <button onclick="startCompetition('hard')" class="btn-3d bg-purple-500 text-white font-bold py-2 px-3 rounded-xl text-xs">🔥 高級 (挑戰字)</button>
+        </div>
+
+        <!-- 競賽專用米字格與提示區域 (預設隱藏) -->
+        <div id="comp-play-area" class="hidden flex flex-col items-center gap-3 w-full">
+            <!-- 提示卡片 -->
+            <div class="w-full bg-amber-50 border-2 border-amber-400/60 rounded-2xl py-2 px-4 text-center shadow-sm">
+                <p id="comp-feedback-text" class="text-sm sm:text-base font-black text-amber-900 tracking-wide">
+                    準備好了嗎？請在米字格中寫出筆順！
+                </p>
+            </div>
+
+            <!-- 米字格畫布 -->
+            <div class="relative w-full max-w-[300px] aspect-square flex items-center justify-center my-1">
+                <div id="comp-grid-container" class="mi-zi-ge w-full h-full relative overflow-hidden flex items-center justify-center">
+                    <div id="comp-character-target" class="w-full h-full flex items-center justify-center"></div>
+                </div>
+            </div>
+
+            <!-- 專用控制按鈕 (重新開始與結束競賽) -->
+            <div class="w-full max-w-[300px] flex gap-2">
+                <button onclick="restartCompetition()" class="flex-1 btn-3d bg-child-orange text-white font-black py-2 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1 border border-orange-600">
+                    <i class="fa-solid fa-rotate-right"></i> 重新開始
+                </button>
+                <button onclick="quitCompetition()" class="flex-1 btn-3d bg-slate-500 text-white font-black py-2 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1 border border-slate-600">
+                    <i class="fa-solid fa-door-open"></i> 結束競賽
+                </button>
+            </div>
+        </div>
+
+        <!-- 排行榜面板 -->
+        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+            <h3 class="text-sm font-black text-slate-700 mb-2 flex items-center gap-1.5">
+                <i class="fa-solid fa-trophy text-amber-500"></i> 全站競賽前 10 名英雄榜
+            </h3>
+            <div id="leaderboard-list" class="flex flex-col gap-1.5 max-h-48 overflow-y-auto text-xs">
+                <div class="text-center text-slate-400 py-3">載入排行榜中...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. 我的成就字庫分頁 (隱藏狀態) -->
+    <div id="tab-vault-view" class="hidden w-full bg-white p-3 sm:p-5 pt-0 sm:pt-1 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col gap-4">
+        <!-- 頂部成就計數卡 -->
+        <div class="bg-gradient-to-r from-amber-300 to-yellow-500 p-4 rounded-2xl text-slate-900 text-center shadow-md flex items-center justify-around">
+            <div class="text-4xl">🏆</div>
+            <div>
+                <h3 class="text-xs font-bold text-amber-900">累計解鎖漢字</h3>
+                <span id="vault-count" class="text-3xl font-black text-slate-900">0</span>
+                <span class="text-xs font-bold"> 個字</span>
+            </div>
+            <div id="vault-badge" class="bg-white/80 px-3 py-1 rounded-full text-xs font-black text-amber-800 shadow-sm">
+                新手啟蒙 🏅
+            </div>
+        </div>
+
+        <!-- 已解鎖漢字網格 -->
+        <div id="vault-grid" class="grid grid-cols-4 sm:grid-cols-5 gap-2.5 max-h-80 overflow-y-auto p-1">
+            <div class="col-span-full text-center text-slate-400 py-6 text-sm font-medium">
+                尚未解鎖漢字，快到「筆順挑戰」過關解鎖吧！
+            </div>
+        </div>
+    </div>
+
+    <!-- 頁尾 -->
+    <footer class="mt-3 text-center text-xs text-slate-400 font-medium shrink-0">
+       🌟專為兒童漢字啟蒙設計 ｜ 雲端同步成就系統 ｜ Design by LouieLucas Studio🌟
+    </footer>
+
+    <!-- JavaScript 核心邏輯 -->
+    <script>
+        let writer = null;
+        let compWriter = null;
+        let currentChar = '永';
+        let compCurrentChar = '';
+        let currentTab = 'practice';
+        let strokeSpeed = 1;
+        let isPaused = false; // 追蹤筆順動畫暫停狀態
+        let isAnimating = false; // 精準追蹤筆順動畫播放狀態
+
+        // 競賽模式 state
+        let isCompeting = false;
+        let compLevel = 'easy';
+        let compScore = 0;
+        let compWordBank = [];
+        const WORD_BANKS = {
+            easy: ['人', '大', '小', '木', '口', '日', '月', '山', '水', '火'],
+            medium: ['永', '福', '好', '學', '習', '春', '喜', '飛', '花', '愛'],
+            hard: ['龍', '龜', '鳳', '聽', '讀', '禮', '藝', '繁', '靈', '慶']
+        };
+
+        // 本機與雲端成就字庫 Array
+        let unlockedVault = new Set();
+
+        let canvas, ctx;
+        let isDrawing = false;
+        let brushColor = '#5271FF';
+        let brushSize = 12;
+
+        window.onload = function () {
+            canvas = document.getElementById('user-canvas');
+            ctx = canvas.getContext('2d');
+            document.getElementById('char-input').value = currentChar;
+
+            resizeCanvas();
+            initDrawingListeners();
+            loadCharacter(currentChar);
+
+            // 初始化雲端 Auth 與監聽
+            if (window.initAuth) window.initAuth();
+
+            window.onUserLogin = function(user) {
+                const userDisplay = document.getElementById('user-display');
+                if (userDisplay) {
+                    const email = user.email || (user.isAnonymous ? '匿名學童' : '已知學員');
+                    userDisplay.innerText = `👤 ${email}`;
+                }
+                syncCloudVault();
+                listenLeaderboard();
+            };
+
+            const speedSlider = document.getElementById('speed-slider');
+            speedSlider.addEventListener('input', (e) => {
+                strokeSpeed = parseFloat(e.target.value);
+                if (currentChar) loadCharacter(currentChar);
+            });
+
+            document.getElementById('brush-size').addEventListener('input', (e) => {
+                brushSize = parseInt(e.target.value);
+            });
+        };
+
+        // 頁籤切換控制
+        function switchTab(tabId) {
+            currentTab = tabId.replace('tab-', '');
+            
+            // UI 按鈕切換高亮
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn btn-3d py-3 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1';
+            });
+            document.getElementById(`nav-${currentTab}`).className = 'tab-btn btn-3d py-3 px-1 rounded-xl font-black text-sm sm:text-base bg-child-blue text-white border border-blue-600 flex items-center justify-center gap-1';
+
+            // 畫面隱藏與顯示
+            document.getElementById('main-learning-view').classList.add('hidden');
+            document.getElementById('tab-competition-view').classList.add('hidden');
+            document.getElementById('tab-vault-view').classList.add('hidden');
+
+            if (currentTab === 'practice' || currentTab === 'challenge') {
+                document.getElementById('main-learning-view').classList.remove('hidden');
+                document.getElementById('control-buttons-group').classList.remove('hidden');
+                
+                const isChallenge = currentTab === 'challenge';
+                toggleChallengeUIDisabled(isChallenge);
+
+                if (currentTab === 'practice') {
+                    updateFeedback('觀看「筆順示範」或用彩筆自由描紅喔！');
+                } else {
+                    updateFeedback('挑戰寫出正確筆順，解鎖成就字庫！');
+                }
+                clearAllContent();
+            } else if (currentTab === 'competition') {
+                document.getElementById('tab-competition-view').classList.remove('hidden');
+            } else if (currentTab === 'vault') {
+                document.getElementById('tab-vault-view').classList.remove('hidden');
+                renderVaultGrid();
+            }
+        }
+
+        // 停用/啟用挑戰模式時的功能按鈕與選單
+        function toggleChallengeUIDisabled(disabled) {
+            const btnAnimate = document.getElementById('btn-animate');
+            const btnToggle = document.getElementById('btn-toggle');
+            const btnClear = document.getElementById('btn-clear');
+            const speedSlider = document.getElementById('speed-slider');
+            const brushSize = document.getElementById('brush-size');
+            const settingsGroup = document.getElementById('settings-menu-group');
+            const colorBtns = document.querySelectorAll('#color-picker-group button');
+
+            [btnAnimate, btnToggle, btnClear, speedSlider, brushSize].forEach(el => {
+                if (el) el.disabled = disabled;
+            });
+
+            colorBtns.forEach(btn => {
+                btn.disabled = disabled;
+                btn.style.pointerEvents = disabled ? 'none' : 'auto';
+            });
+
+            if (disabled) {
+                document.getElementById('control-buttons-group').classList.add('opacity-40', 'pointer-events-none');
+                settingsGroup.classList.add('opacity-40', 'pointer-events-none');
+            } else {
+                document.getElementById('control-buttons-group').classList.remove('opacity-40', 'pointer-events-none');
+                settingsGroup.classList.remove('opacity-40', 'pointer-events-none');
+            }
+        }
+
+        // 載入漢字
+        function loadCharacter(char) {
+            if (!char) return;
+
+            // 檢查是否為標準中文字元
+            const isChineseChar = /^[\u4e00-\u9fa5]$/.test(char);
+            if (!isChineseChar) {
+                updateFeedback('⚠️ 請輸入單一標準漢字（例如：永、福）喔！', 'text-child-pink');
+                return;
+            }
+
+            currentChar = char;
+            clearUserCanvas();
+            const container = document.getElementById('character-target');
+            container.innerHTML = '';
+            writer = null;
+            initWriter(char);
+        }
+
+        function initWriter(char) {
+            if (!char) return;
+            const container = document.getElementById('character-target');
+            container.innerHTML = '';
+            const gridWidth = document.getElementById('grid-container').clientWidth;
+
+            try {
+                writer = HanziWriter.create('character-target', char, {
+                    width: gridWidth,
+                    height: gridWidth,
+                    padding: 20,
+                    strokeAnimationSpeed: strokeSpeed,
+                    delayBetweenStrokes: 200,
+                    strokeColor: '#2C3E50',
+                    outlineColor: '#CBD5E1',
+                    showOutline: true,
+                    showCharacter: currentTab === 'practice',
+                    highlightColor: '#FF66C4',
+                    onLoadCharDataError: function(err) {
+                        console.warn('HanziWriter 載入失敗:', err);
+                        updateFeedback(`⚠️ 抱歉，暫無「${char}」的筆順資料`, 'text-child-orange');
+                    },
+                    onMistake: function() {
+                        if (currentTab === 'challenge') {
+                            updateFeedback('哎呀！筆順或方向錯囉，重試看看！', 'text-child-orange');
+                        }
+                    },
+                    onComplete: function() {
+                        if (currentTab === 'challenge') {
+                            updateFeedback('🎉 恭喜挑戰成功！已存入成就字庫！', 'text-child-blue');
+                            saveToVault(currentChar);
+                            handleQuizSuccessEffects();
+                        }
+                    }
+                });
+
+                if (currentTab === 'challenge') {
+                    writer.quiz();
+                    canvas.style.pointerEvents = 'none';
+                } else {
+                    canvas.style.pointerEvents = 'auto';
+                }
+            } catch (err) {
+                console.warn(err);
+                updateFeedback(`⚠️ 載入「${char}」時發生錯誤`, 'text-child-pink');
+            }
+        }
+
+        // 競賽專用邏輯
+        function startCompetition(level) {
+            compLevel = level;
+            compScore = 0;
+            isCompeting = true;
+            compWordBank = [...WORD_BANKS[level]].sort(() => Math.random() - 0.5);
+
+            document.getElementById('comp-play-area').classList.remove('hidden');
+            nextCompetitionWord();
+        }
+
+        function restartCompetition() {
+            startCompetition(compLevel);
+        }
+
+        function quitCompetition() {
+            isCompeting = false;
+            document.getElementById('comp-play-area').classList.add('hidden');
+            if (compWriter) {
+                document.getElementById('comp-character-target').innerHTML = '';
+                compWriter = null;
+            }
+        }
+
+        function nextCompetitionWord() {
+            if (compWordBank.length === 0) {
+                endCompetition(true);
+                return;
+            }
+            compCurrentChar = compWordBank.pop();
+            updateCompFeedback(`🏆 得分: ${compScore} 分 ｜ 請寫出「${compCurrentChar}」`);
+            initCompWriter(compCurrentChar);
+        }
+
+        function initCompWriter(char) {
+            const container = document.getElementById('comp-character-target');
+            container.innerHTML = '';
+            const gridWidth = document.getElementById('comp-grid-container').clientWidth;
+
+            try {
+                compWriter = HanziWriter.create('comp-character-target', char, {
+                    width: gridWidth,
+                    height: gridWidth,
+                    padding: 15,
+                    strokeAnimationSpeed: 1,
+                    delayBetweenStrokes: 200,
+                    strokeColor: '#2C3E50',
+                    outlineColor: '#CBD5E1',
+                    showOutline: true,
+                    showCharacter: false,
+                    highlightColor: '#FF66C4',
+                    onMistake: function() {
+                        endCompetition(false);
+                    },
+                    onComplete: function() {
+                        compScore++;
+                        nextCompetitionWord();
+                    }
+                });
+                compWriter.quiz();
+            } catch (e) {
+                console.warn('競賽 HanziWriter 載入錯誤:', e);
+            }
+        }
+
+        function endCompetition(isAllClear) {
+            isCompeting = false;
+            const msg = isAllClear 
+                ? `🔥 完全破關！獲得 ${compScore} 分！`
+                : `💥 寫錯筆畫囉！競賽結束，得分: ${compScore} 分！`;
+            
+            updateCompFeedback(msg);
+            saveScoreToCloud(compScore, compLevel);
+        }
+
+        function updateCompFeedback(text) {
+            const fbText = document.getElementById('comp-feedback-text');
+            if (fbText) fbText.innerText = text;
+        }
+
+        // 成就字庫儲存與同步
+        async function saveToVault(char) {
+            unlockedVault.add(char);
+            if (window.currentUser && window.db) {
+                try {
+                    const userRef = window.doc(window.db, 'artifacts', window.appId, 'users', window.currentUser.uid, 'vault');
+                    await window.setDoc(userRef, {
+                        unlocked: Array.from(unlockedVault)
+                    }, { merge: true });
+                } catch(e) {
+                    console.log('Vault save error:', e);
+                }
+            }
+        }
+
+        async function syncCloudVault() {
+            if (window.currentUser && window.db) {
+                try {
+                    const userRef = window.doc(window.db, 'artifacts', window.appId, 'users', window.currentUser.uid, 'vault');
+                    const snap = await window.getDoc(userRef);
+                    if (snap.exists() && snap.data().unlocked) {
+                        snap.data().unlocked.forEach(c => unlockedVault.add(c));
+                    }
+                } catch(e) {}
+            }
+        }
+
+        async function saveScoreToCloud(score, level) {
+            if (window.currentUser && window.db) {
+                try {
+                    const leaderRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'leaderboard', window.currentUser.uid);
+                    await window.setDoc(leaderRef, {
+                        uid: window.currentUser.uid,
+                        name: window.currentUser.email || '學童玩家',
+                        score: score,
+                        level: level,
+                        updatedAt: Date.now()
+                    }, { merge: true });
+                } catch(e) {}
+            }
+        }
+
+        function listenLeaderboard() {
+            if (!window.db) return;
+            try {
+                const colRef = window.collection(window.db, 'artifacts', window.appId, 'public', 'data', 'leaderboard');
+                window.onSnapshot(colRef, (snapshot) => {
+                    let list = [];
+                    snapshot.forEach(doc => list.push(doc.data()));
+                    list.sort((a, b) => b.score - a.score);
+                    renderLeaderboard(list.slice(0, 10));
+                });
+            } catch(e) {}
+        }
+
+        function renderLeaderboard(data) {
+            const container = document.getElementById('leaderboard-list');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="text-center text-slate-400 py-3">尚無數據，快來挑戰！</div>';
+                return;
+            }
+            container.innerHTML = data.map((item, index) => `
+                <div class="flex items-center justify-between p-2 bg-white rounded-xl border border-slate-200">
+                    <span class="font-black text-slate-700 w-6">#${index + 1}</span>
+                    <span class="font-bold text-slate-800 flex-1 truncate px-2">${item.name}</span>
+                    <span class="font-black text-child-pink">${item.score} 分</span>
+                </div>
+            `).join('');
+        }
+
+        function renderVaultGrid() {
+            const grid = document.getElementById('vault-grid');
+            const arr = Array.from(unlockedVault);
+            document.getElementById('vault-count').innerText = arr.length;
+            
+            const badge = document.getElementById('vault-badge');
+            if (arr.length >= 20) badge.innerText = '漢字大師 👑';
+            else if (arr.length >= 10) badge.innerText = '漢字小博士 🎓';
+            else badge.innerText = '新手啟蒙 🏅';
+
+            grid.innerHTML = arr.map(char => `
+                <div onclick="previewVaultChar('${char}')" class="btn-3d bg-amber-50 p-2 rounded-2xl border-2 border-amber-300 text-center cursor-pointer hover:bg-amber-100">
+                    <div class="text-2xl sm:text-3xl font-black text-slate-800">${char}</div>
+                    <div class="text-[10px] text-amber-700 font-bold mt-1">已解鎖</div>
+                </div>
+            `).join('');
+        }
+
+        function previewVaultChar(char) {
+            switchTab('tab-practice');
+            document.getElementById('char-input').value = char;
+            loadCharacter(char);
+        }
+
+        function handleInputChar(val) {
+            const trimmed = val.trim();
+            if (trimmed.length > 0) {
+                loadCharacter(trimmed.charAt(trimmed.length - 1));
+            }
+        }
+
+        function resizeCanvas() {
+            const container = document.getElementById('grid-container');
+            const rect = container.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            clearUserCanvas();
+        }
+
+        function clearAllContent() {
+            currentChar = '';
+            document.getElementById('char-input').value = '';
+            document.getElementById('character-target').innerHTML = '';
+            clearUserCanvas();
+            writer = null;
+        }
+
+        function animateCharacter() {
+            if (!writer) return;
+            isPaused = false;
+            isAnimating = true;
+            updateToggleBtnIcon(false);
+            setSpeedSliderDisabled(true);
+            writer.animateCharacter({ 
+                onComplete: () => {
+                    isPaused = false;
+                    isAnimating = false;
+                    updateToggleBtnIcon(false);
+                    setSpeedSliderDisabled(false);
+                    speakCharacter(); // 筆順播放完畢後自動發音一次
+                } 
+            });
+        }
+
+        function toggleAnimation() {
+            if (!writer) return;
+            
+            // 情況 1: 若處於暫停狀態 -> 呼叫 resumeAnimation() 從暫停點繼續播放到完畢
+            if (isPaused) {
+                writer.resumeAnimation();
+                isPaused = false;
+                isAnimating = true;
+                updateToggleBtnIcon(false);
+                setSpeedSliderDisabled(true);
+                return;
+            }
+
+            // 情況 2: 若正在播放中 -> 呼叫 pauseAnimation() 暫停在當前畫面
+            if (isAnimating) {
+                writer.pauseAnimation();
+                isPaused = true;
+                isAnimating = false;
+                updateToggleBtnIcon(true);
+                setSpeedSliderDisabled(false);
+                return;
+            }
+
+            // 情況 3: 若完全靜止且未播放 -> 從頭開始播放動畫
+            animateCharacter();
+        }
+
+        function updateToggleBtnIcon(paused) {
+            const icon = document.getElementById('icon-toggle');
+            if (icon) {
+                if (paused) {
+                    icon.className = 'fa-solid fa-play text-base';
+                } else {
+                    icon.className = 'fa-solid fa-pause text-base';
+                }
+            }
+        }
+
+        function setSpeedSliderDisabled(disabled) {
+            const speedSlider = document.getElementById('speed-slider');
+            speedSlider.disabled = disabled;
+            if (disabled) speedSlider.classList.add('opacity-50', 'cursor-not-allowed');
+            else speedSlider.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        function initDrawingListeners() {
+            const getPos = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return { x: clientX - rect.left, y: clientY - rect.top };
+            };
+            const startDraw = (e) => {
+                if (currentTab !== 'practice') return;
+                isDrawing = true;
+                const pos = getPos(e);
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y);
+                ctx.strokeStyle = brushColor;
+                ctx.lineWidth = brushSize;
+                ctx.lineCap = 'round';
+            };
+            const draw = (e) => {
+                if (!isDrawing || currentTab !== 'practice') return;
+                e.preventDefault();
+                const pos = getPos(e);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+            };
+            const stopDraw = () => { isDrawing = false; };
+
+            canvas.addEventListener('mousedown', startDraw);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDraw);
+            canvas.addEventListener('mouseleave', stopDraw);
+            canvas.addEventListener('touchstart', startDraw, { passive: false });
+            canvas.addEventListener('touchmove', draw, { passive: false });
+            canvas.addEventListener('touchend', stopDraw);
+        }
+
+        function setBrushColor(color, btnEl) {
+            brushColor = color;
+            document.querySelectorAll('#color-picker-group .color-btn').forEach(b => b.classList.remove('ring-2', 'ring-slate-900'));
+            if (btnEl) btnEl.classList.add('ring-2', 'ring-slate-900');
+        }
+
+        function clearUserCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function speakCharacter() {
+            if ('speechSynthesis' in window && currentChar) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(currentChar);
+                utterance.lang = 'zh-TW';
+                utterance.rate = 0.6; // 發音速度放慢 25%
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function handleQuizSuccessEffects() {
+            const charContainer = document.getElementById('character-target');
+            if (!charContainer) return;
+            charContainer.classList.remove('stroke-blink-once');
+            void charContainer.offsetWidth;
+            charContainer.classList.add('stroke-blink-once');
+
+            setTimeout(() => {
+                charContainer.classList.remove('stroke-blink-once');
+                createConfettiExplosion('25%', '25%');
+                setTimeout(() => {
+                    createConfettiExplosion('75%', '75%');
+                    speakCharacter();
+                }, 300);
+            }, 1200);
+        }
+
+        function createConfettiExplosion(originLeft = '50%', originTop = '50%') {
+            const gridContainer = document.getElementById('grid-container');
+            if (!gridContainer) return;
+            const colors = ['#FF4aba', '#FFDE59', '#415acc', '#1bd2b2', '#FF914D'];
+            for (let i = 0; i < 25; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti-particle';
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const size = Math.random() * 8 + 6;
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                confetti.style.backgroundColor = color;
+                confetti.style.left = originLeft;
+                confetti.style.top = originTop;
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 100 + 30;
+                confetti.style.setProperty('--tx', `${Math.cos(angle) * distance}px`);
+                confetti.style.setProperty('--ty', `${Math.sin(angle) * distance + 20}px`);
+                confetti.style.setProperty('--rot', `${(Math.random() - 0.5) * 720}deg`);
+                gridContainer.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 1200);
+            }
+        }
+
+        function updateFeedback(text, colorClass = 'text-child-blue') {
+            const fbText = document.getElementById('feedback-text');
+            if (fbText) {
+                fbText.innerText = text;
+                fbText.className = `text-sm sm:text-base font-black ${colorClass} tracking-wide`;
+            }
+        }
+    </script>
+</body>
+</html>
