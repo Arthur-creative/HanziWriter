@@ -178,7 +178,7 @@
     <!-- 頂部用戶帳號與分頁導覽 -->
     <header class="w-full text-center mb-0 shrink-0">
         <div class="flex items-center justify-between bg-white px-4 py-1 rounded-2xl shadow-md border border-slate-200 mb-2">
-            <h1 class="text-base sm:text-base font-black text-child-black tracking-wide flex items-center gap-1.5">
+            <h1 class="text-sm sm:text-sm font-black text-child-black tracking-wide flex items-center gap-1.5">
                 <span>✏️</span> 專為兒童漢字啟蒙設計 ｜ 雲端同步成就系統 ｜ 
             </h1>
             <div id="user-info" class="flex items-center gap-2">
@@ -246,15 +246,15 @@
         <!-- 按鈕群 (整合暫停/繼續至快寫與慢寫按鈕，均分為 3 個按鈕) -->
         <div id="control-buttons-group" class="w-full max-w-[360px] grid grid-cols-3 gap-2">
             <button id="btn-slow" onclick="toggleSpeedPlay(0.4)" 
-                class="btn-3d bg-child-orange text-black font-black h-12 rounded-xl border border-sky-300 flex items-center justify-center gap-1.5 text-xs sm:text-sm">
-                <i id="icon-slow" class="fa-solid fa-play text-sm"></i> 跟寫
+                class="btn-3d bg-child-orange text-black font-black h-12 rounded-xl border border-sky-300 flex items-center justify-center gap-1.5 text-sm sm:text-base">
+                <i id="icon-slow" class="fa-solid fa-play text-xl"></i> 跟寫
             </button>
             <button id="btn-fast" onclick="toggleSpeedPlay(1)" 
-                class="btn-3d bg-child-orange text-black font-black h-12 rounded-xl border border-sky-300 flex items-center justify-center gap-1.5 text-xs sm:text-sm">
+                class="btn-3d bg-child-orange text-black font-black h-12 rounded-xl border border-sky-300 flex items-center justify-center gap-1.5 text-sm sm:text-base">
                 <i id="icon-fast" class="fa-solid fa-play text-xl"></i> 示範
             </button>
             <button id="btn-clear" onclick="clearUserCanvas()" 
-                class="btn-3d bg-child-green text-black font-black h-12 rounded-xl border border-teal-600 flex items-center justify-center text-xs sm:text-sm">
+                class="btn-3d bg-child-green text-black font-black h-12 rounded-xl border border-teal-600 flex items-center justify-center text-sm sm:text-base">
                 清除筆跡
             </button>
         </div>
@@ -265,10 +265,10 @@
             
             <!-- 顏色選擇器 -->
             <div class="flex gap-1.5 items-center shrink-0" id="color-picker-group">
-                <button onclick="setBrushColor('#2965f2', this)" class="color-btn w-6 h-6 rounded-full bg-[#5271FF] border-2 border-white shadow-sm ring-2 ring-slate-900 transition-all"></button>
-                <button onclick="setBrushColor('#c72c14', this)" class="color-btn w-6 h-6 rounded-full bg-[#E53E3E] border-2 border-white shadow-sm transition-all"></button>
-                <button onclick="setBrushColor('#e9c925', this)" class="color-btn w-6 h-6 rounded-full bg-[#FFDE59] border-2 border-white shadow-sm transition-all"></button>
-                <button onclick="setBrushColor('#07b798', this)" class="color-btn w-6 h-6 rounded-full bg-[#00C2CB] border-2 border-white shadow-sm transition-all"></button>
+                <button onclick="setBrushColor('#2f7fff', this)" class="color-btn w-6 h-6 rounded-full bg-[#5271FF] border-2 border-white shadow-sm ring-2 ring-slate-900 transition-all"></button>
+                <button onclick="setBrushColor('#e12626', this)" class="color-btn w-6 h-6 rounded-full bg-[#E53E3E] border-2 border-white shadow-sm transition-all"></button>
+                <button onclick="setBrushColor('#fce11d', this)" class="color-btn w-6 h-6 rounded-full bg-[#FFDE59] border-2 border-white shadow-sm transition-all"></button>
+                <button onclick="setBrushColor('#0ac7a6', this)" class="color-btn w-6 h-6 rounded-full bg-[#00C2CB] border-2 border-white shadow-sm transition-all"></button>
             </div>
 
             <!-- 三段粗細按鈕 (細、中、粗 線條示意圖) -->
