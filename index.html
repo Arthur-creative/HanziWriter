@@ -72,11 +72,11 @@
             theme: {
                 extend: {
                     colors: {
-                        'child-yellow': '#FFDE59',
+                        'child-yellow': '#ffde59',
                         'child-pink': '#FF4aba',
                         'child-blue': '#415acc',
                         'child-green': '#1bd2b2',
-                        'child-orange': '#FF914D',
+                        'child-orange': '#fdaa3a',
                         'grid-red': '#E53E3E',
                     },
                     fontFamily: {
@@ -176,10 +176,10 @@
 <body class="min-h-screen text-slate-800 flex flex-col justify-between p-2 sm:p-4 font-sans max-w-2xl mx-auto">
 
     <!-- 頂部用戶帳號與分頁導覽 -->
-    <header class="w-full text-center mb-2 shrink-0">
-        <div class="flex items-center justify-between bg-white px-4 py-2 rounded-2xl shadow-md border border-slate-200 mb-2">
-            <h1 class="text-base sm:text-xl font-black text-child-blue tracking-wide flex items-center gap-1.5">
-                <span>✏️</span> 漢字筆順大挑戰
+    <header class="w-full text-center mb-0 shrink-0">
+        <div class="flex items-center justify-between bg-white px-4 py-1 rounded-2xl shadow-md border border-slate-200 mb-2">
+            <h1 class="text-base sm:text-base font-black text-child-black tracking-wide flex items-center gap-1.5">
+                <span>✏️</span> 專為兒童漢字啟蒙設計 ｜ 雲端同步成就系統 ｜ 
             </h1>
             <div id="user-info" class="flex items-center gap-2">
                 <span id="user-display" class="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full border border-slate-200">
@@ -210,7 +210,7 @@
     </header>
 
     <!-- 1 & 2. 筆順練習 / 筆順挑戰 主要區域 -->
-    <main id="main-learning-view" class="w-full bg-white p-3 sm:p-5 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col items-center justify-center my-auto gap-3">
+    <main id="main-learning-view" class="w-full bg-white p-1 sm:p-1 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col items-center justify-center my-auto gap-3">
         
         <!-- 輸入欄與功能區 (垂直置中排版) -->
         <div class="w-full flex items-center justify-center gap-2.5 p-2 bg-slate-50 rounded-2xl border border-slate-200">
@@ -246,12 +246,12 @@
         <!-- 按鈕群 (整合暫停/繼續至快寫與慢寫按鈕，均分為 3 個按鈕) -->
         <div id="control-buttons-group" class="w-full max-w-[360px] grid grid-cols-3 gap-2">
             <button id="btn-slow" onclick="toggleSpeedPlay(0.4)" 
-                class="btn-3d bg-sky-200 text-black font-black h-12 rounded-xl border border-sky-300 flex items-center justify-center gap-1.5 text-xs sm:text-sm">
-                <i id="icon-slow" class="fa-solid fa-play text-xs"></i> 跟寫
+                class="btn-3d bg-child-orange text-black font-black h-12 rounded-xl border border-sky-300 flex items-center justify-center gap-1.5 text-xs sm:text-sm">
+                <i id="icon-slow" class="fa-solid fa-play text-sm"></i> 跟寫
             </button>
             <button id="btn-fast" onclick="toggleSpeedPlay(1)" 
-                class="btn-3d bg-sky-200 text-black font-black h-12 rounded-xl border border-sky-300 flex items-center justify-center gap-1.5 text-xs sm:text-sm">
-                <i id="icon-fast" class="fa-solid fa-play text-xs"></i> 示範
+                class="btn-3d bg-child-orange text-black font-black h-12 rounded-xl border border-sky-300 flex items-center justify-center gap-1.5 text-xs sm:text-sm">
+                <i id="icon-fast" class="fa-solid fa-play text-xl"></i> 示範
             </button>
             <button id="btn-clear" onclick="clearUserCanvas()" 
                 class="btn-3d bg-child-green text-black font-black h-12 rounded-xl border border-teal-600 flex items-center justify-center text-xs sm:text-sm">
@@ -265,10 +265,10 @@
             
             <!-- 顏色選擇器 -->
             <div class="flex gap-1.5 items-center shrink-0" id="color-picker-group">
-                <button onclick="setBrushColor('#5271FF', this)" class="color-btn w-6 h-6 rounded-full bg-[#5271FF] border-2 border-white shadow-sm ring-2 ring-slate-900 transition-all"></button>
-                <button onclick="setBrushColor('#E53E3E', this)" class="color-btn w-6 h-6 rounded-full bg-[#E53E3E] border-2 border-white shadow-sm transition-all"></button>
-                <button onclick="setBrushColor('#FFDE59', this)" class="color-btn w-6 h-6 rounded-full bg-[#FFDE59] border-2 border-white shadow-sm transition-all"></button>
-                <button onclick="setBrushColor('#00C2CB', this)" class="color-btn w-6 h-6 rounded-full bg-[#00C2CB] border-2 border-white shadow-sm transition-all"></button>
+                <button onclick="setBrushColor('#2965f2', this)" class="color-btn w-6 h-6 rounded-full bg-[#5271FF] border-2 border-white shadow-sm ring-2 ring-slate-900 transition-all"></button>
+                <button onclick="setBrushColor('#c72c14', this)" class="color-btn w-6 h-6 rounded-full bg-[#E53E3E] border-2 border-white shadow-sm transition-all"></button>
+                <button onclick="setBrushColor('#e9c925', this)" class="color-btn w-6 h-6 rounded-full bg-[#FFDE59] border-2 border-white shadow-sm transition-all"></button>
+                <button onclick="setBrushColor('#07b798', this)" class="color-btn w-6 h-6 rounded-full bg-[#00C2CB] border-2 border-white shadow-sm transition-all"></button>
             </div>
 
             <!-- 三段粗細按鈕 (細、中、粗 線條示意圖) -->
@@ -366,7 +366,7 @@
 
     <!-- 頁尾 -->
     <footer class="mt-3 text-center text-xs text-slate-400 font-medium shrink-0">
-       🌟專為兒童漢字啟蒙設計 ｜ 雲端同步成就系統 ｜ Design by LouieLucas Studio🌟
+       🌟Design by LouieLucas Studio🌟
     </footer>
 
     <!-- JavaScript 核心邏輯 -->
@@ -712,8 +712,8 @@
             document.getElementById('vault-count').innerText = arr.length;
             
             const badge = document.getElementById('vault-badge');
-            if (arr.length >= 20) badge.innerText = '漢字大師 👑';
-            else if (arr.length >= 10) badge.innerText = '漢字小博士 🎓';
+            if (arr.length >= 100) badge.innerText = '漢字大師 👑';
+            else if (arr.length >= 50) badge.innerText = '漢字小博士 🎓';
             else badge.innerText = '新手啟蒙 🏅';
 
             grid.innerHTML = arr.map(char => `
