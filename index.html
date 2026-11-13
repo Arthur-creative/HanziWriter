@@ -21,14 +21,15 @@
         import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase Config
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'hanzi-learning-app';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'hanzi-learning-e565b';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "demo-api-key",
-            authDomain: "demo-app.firebaseapp.com",
-            projectId: "demo-app",
-            storageBucket: "demo-app.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:demo"
+            apiKey: "AIzaSyArTnvG8A4VEvS7pYVADs5AjjdY9bgDP-w",
+            authDomain: "hanzi-learning-e565b.firebaseapp.com",
+            databaseURL: "https://hanzi-learning-e565b-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "hanzi-learning-e565b",
+            storageBucket: "hanzi-learning-e565b.firebasestorage.app",
+            messagingSenderId: "1047703301489",
+            appId: "1:1047703301489:web:c463968c8edc3aaf6f5ad0"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -178,7 +179,7 @@
     <!-- 頂部用戶帳號與分頁導覽 -->
     <header class="w-full text-center mb-0 shrink-0">
         <div class="flex items-center justify-between bg-white px-4 py-1 rounded-2xl shadow-md border border-slate-200 mb-2">
-            <h1 class="text-xs sm:text-sm font-black text-child-black tracking-wide flex items-center gap-1.5">
+            <h1 class="text-sm sm:text-sm font-black text-child-black tracking-wide flex items-center gap-1.5">
                 <span>✏️</span> 專為兒童設計的漢字筆順學習系統 
             </h1>
             <div id="user-info" class="flex items-center gap-2">
@@ -191,19 +192,19 @@
         <!-- 四大主分頁選單按鈕 -->
         <nav class="grid grid-cols-4 gap-1.5 sm:gap-2.5">
             <button onclick="switchTab('tab-practice')" id="nav-practice" 
-                class="tab-btn btn-3d py-3 px-1 rounded-xl font-black text-sm sm:text-base bg-child-blue text-white border border-blue-600 flex items-center justify-center gap-1">
+                class="tab-btn btn-3d py-2 px-1 rounded-xl font-black text-sm sm:text-base bg-child-blue text-white border border-blue-600 flex items-center justify-center gap-1">
                 <span>🏠</span> 練習
             </button>
             <button onclick="switchTab('tab-challenge')" id="nav-challenge" 
-                class="tab-btn btn-3d py-3 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1">
+                class="tab-btn btn-3d py-2 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1">
                 <span>🎯</span> 挑戰
             </button>
             <button onclick="switchTab('tab-competition')" id="nav-competition" 
-                class="tab-btn btn-3d py-3 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1">
+                class="tab-btn btn-3d py-2 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1">
                 <span>⚔️</span> 競賽
             </button>
             <button onclick="switchTab('tab-vault')" id="nav-vault" 
-                class="tab-btn btn-3d py-3 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1">
+                class="tab-btn btn-3d py-2 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1">
                 <span>🏆</span> 字庫
             </button>
         </nav>
@@ -216,20 +217,20 @@
         <div class="w-full flex items-center justify-center gap-2.5 p-2 bg-slate-50 rounded-2xl border border-slate-200">
             <div class="flex-1 max-w-[200px]">
                 <input type="text" id="char-input" maxlength="1" placeholder="輸入單字" 
-                    class="w-full text-center text-2xl font-black border-2 border-child-blue rounded-xl p-1 bg-blue-50/30 text-child-blue focus:outline-none focus:ring-2 focus:ring-child-blue shadow-inner h-12"
+                    class="w-full text-center text-2xl font-black border-2 border-child-blue rounded-xl p-1 bg-blue-50/30 text-child-blue focus:outline-none focus:ring-2 focus:ring-child-blue shadow-inner h-11"
                     oninput="handleInputChar(this.value)">
             </div>
 
             <div class="flex gap-1 shrink-0">
                 <button onclick="clearAllContent()" title="清除"
-                    class="btn-3d bg-child-green text-slate-900 font-black px-4 py-2 h-12 rounded-xl border border-teal-600 text-sm sm:text-base flex items-center justify-center gap-1.5">
+                    class="btn-3d bg-child-green text-slate-900 font-black px-4 py-2 h-11 rounded-xl border border-teal-600 text-sm sm:text-base flex items-center justify-center gap-1.5">
                     <i class="fa-solid fa-trash-can text-base sm:text-lg"></i>清除
                 </button>
             </div>
         </div>
 
         <!-- 提示卡片 -->
-        <div id="feedback-card" class="w-full bg-blue-100 border-2 border-child-blue/40 rounded-2xl py-2 px-4 text-center shadow-sm">
+        <div id="feedback-card" class="w-full bg-blue-100 border-2 border-child-blue/40 rounded-xl py-1 px-4 text-center shadow-sm">
             <p id="feedback-text" class="text-sm sm:text-base font-black text-child-blue tracking-wide">
                 點擊「播放筆順」觀看漢字怎麼寫喔！
             </p>
@@ -261,7 +262,7 @@
 
         <!-- 筆畫調整選單 (恢復單行佈局) -->
         <div id="settings-menu-group" class="w-full max-w-[360px] bg-slate-100 p-2.5 rounded-2xl border border-slate-200 flex items-center justify-between transition-all">
-            <span class="text-xs font-black text-slate-700 shrink-0">筆畫調整:</span>
+            <span class="text-sm font-black text-slate-700 shrink-0">筆畫調整:</span>
             
             <!-- 顏色選擇器 -->
             <div class="flex gap-1.5 items-center shrink-0" id="color-picker-group">
@@ -292,15 +293,15 @@
     <!-- 3. 筆順競賽分頁 (隱藏狀態) -->
     <div id="tab-competition-view" class="hidden w-full bg-white p-3 sm:p-5 pt-0 sm:pt-1 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col gap-4">
         <div class="bg-gradient-to-r from-orange-400 to-amber-500 p-3 rounded-2xl text-white text-center shadow-md">
-            <h2 class="text-lg font-black tracking-wide">⚔️ 筆順全能競賽</h2>
-            <p class="text-xs mt-1 opacity-95">零容錯挑戰！選擇等級區域開始！</p>
+            <h2 class="text-lg font-black tracking-wide">⚔️ 零容錯筆順挑戰競賽 ⚔️</h2>
+            <p class="text-xs mt-1 opacity-95">選擇等級後開始挑戰吧！</p>
         </div>
 
         <!-- 等級選擇器 -->
         <div id="comp-level-selector" class="flex justify-center gap-2">
-            <button onclick="startCompetition('easy')" class="btn-3d bg-emerald-500 text-white font-bold py-2 px-3 rounded-xl text-xs">🌱 初級 (常用字)</button>
-            <button onclick="startCompetition('medium')" class="btn-3d bg-blue-500 text-white font-bold py-2 px-3 rounded-xl text-xs">⭐ 中級 (進階字)</button>
-            <button onclick="startCompetition('hard')" class="btn-3d bg-purple-500 text-white font-bold py-2 px-3 rounded-xl text-xs">🔥 高級 (挑戰字)</button>
+            <button onclick="startCompetition('easy')" class="btn-3d bg-emerald-500 text-white font-bold py-2 px-3 rounded-xl text-xs">🌱 初級</button>
+            <button onclick="startCompetition('medium')" class="btn-3d bg-blue-500 text-white font-bold py-2 px-3 rounded-xl text-xs">⭐ 中級</button>
+            <button onclick="startCompetition('hard')" class="btn-3d bg-purple-500 text-white font-bold py-2 px-3 rounded-xl text-xs">🔥 高級</button>
         </div>
 
         <!-- 競賽專用米字格與提示區域 (預設隱藏) -->
@@ -385,11 +386,30 @@
         let compLevel = 'easy';
         let compScore = 0;
         let compWordBank = [];
-        const WORD_BANKS = {
+        // 預設字庫（作為雲端載入前的備援）
+        let WORD_BANKS = {
             easy: ['人', '大', '小', '木', '口', '日', '月', '山', '水', '火'],
             medium: ['永', '福', '好', '學', '習', '春', '喜', '飛', '花', '愛'],
             hard: ['龍', '龜', '鳳', '聽', '讀', '禮', '藝', '繁', '靈', '慶']
         };
+
+        // 從 Firestore 讀取雲端競賽題庫 (word_banks)
+        async function loadCloudWordBanks() {
+            if (!window.db || !window.getDoc || !window.doc) return;
+            const levels = ['easy', 'medium', 'hard'];
+            for (const level of levels) {
+                try {
+                    const docRef = window.doc(window.db, 'word_banks', level);
+                    const docSnap = await window.getDoc(docRef);
+                    if (docSnap.exists() && Array.isArray(docSnap.data().words) && docSnap.data().words.length > 0) {
+                        WORD_BANKS[level] = docSnap.data().words;
+                        console.log(`✅ 成功載入雲端題庫 [${level}]:`, WORD_BANKS[level]);
+                    }
+                } catch (e) {
+                    console.warn(`⚠️ 載入雲端題庫 [${level}] 失敗，將使用預設題庫:`, e);
+                }
+            }
+        }
 
         // 本機與雲端成就字庫 Array
         let unlockedVault = new Set();
@@ -417,6 +437,7 @@
                     const email = user.email || (user.isAnonymous ? '匿名學童' : '已知學員');
                     userDisplay.innerText = `👤 ${email}`;
                 }
+                loadCloudWordBanks(); // 載入您建立的 Firestore 雲端競賽題庫
                 syncCloudVault();
                 listenLeaderboard();
             };
@@ -532,7 +553,7 @@
                     },
                     onMistake: function() {
                         if (currentTab === 'challenge') {
-                            updateFeedback(' 哎呀! 筆順錯囉，請再試試!', 'text-child-orange');
+                            updateFeedback(' 哎呀! 筆順錯囉，請再試試!', 'text-child-pink');
                         }
                     },
                     onComplete: function() {
