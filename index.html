@@ -17,19 +17,18 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase Config
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'hanzi-learning-e565b';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'hanzi-learning-app';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "AIzaSyArTnvG8A4VEvS7pYVADs5AjjdY9bgDP-w",
-            authDomain: "hanzi-learning-e565b.firebaseapp.com",
-            databaseURL: "https://hanzi-learning-e565b-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "hanzi-learning-e565b",
-            storageBucket: "hanzi-learning-e565b.firebasestorage.app",
-            messagingSenderId: "1047703301489",
-            appId: "1:1047703301489:web:c463968c8edc3aaf6f5ad0"
+            apiKey: "demo-api-key",
+            authDomain: "demo-app.firebaseapp.com",
+            projectId: "demo-app",
+            storageBucket: "demo-app.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:demo"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -47,38 +46,12 @@
         window.collection = collection;
         window.onSnapshot = onSnapshot;
 
-        // Google 一鍵登入功能
-        const googleProvider = new GoogleAuthProvider();
-        window.loginWithGoogle = async function() {
-            try {
-                await signInWithPopup(auth, googleProvider);
-                if (window.showToast) window.showToast("🎉 Google 帳號登入成功！雲端字庫已同步");
-            } catch (error) {
-                console.warn("Google 登入提示:", error);
-                if (error.code === 'auth/popup-closed-by-user') return;
-                if (window.showToast) {
-                    window.showToast("⚠️ 登入未完成，請確認 Firebase 已開啟 Google 登入並授權目前網域");
-                }
-            }
-        };
-
-        // 登出並切回訪客模式
-        window.logoutUser = async function() {
-            try {
-                await signOut(auth);
-                if (window.showToast) window.showToast("👋 已登出，切換回訪客模式");
-                await signInAnonymously(auth);
-            } catch (error) {
-                console.warn("登出失敗:", error);
-            }
-        };
-
         // 初始化登入狀態
         window.initAuth = async function() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
-                } else if (!auth.currentUser) {
+                } else {
                     await signInAnonymously(auth);
                 }
             } catch(e) {
@@ -87,8 +60,10 @@
         };
 
         onAuthStateChanged(auth, (user) => {
-            window.currentUser = user;
-            if (window.onUserLogin) window.onUserLogin(user);
+            if (user) {
+                window.currentUser = user;
+                if (window.onUserLogin) window.onUserLogin(user);
+            }
         });
     </script>
 
@@ -175,13 +150,19 @@
             box-shadow: 0 1px 0 0 #94a3b8;
         }
 
-        @keyframes strokeBlinkOnce {
-            0%, 100% { fill: #2C3E50; stroke: #2C3E50; }
-            50% { fill: #E53E3E; stroke: #E53E3E; }
+        @keyframes gridBlinkOnce {
+            0%, 100% {
+                background-color: #FAF6EE;
+                box-shadow: 0 10px 25px -5px rgba(229, 62, 62, 0.2), 0 8px 10px -6px rgba(229, 62, 62, 0.2);
+            }
+            50% {
+                background-color: #FECACA;
+                box-shadow: 0 0 28px 6px rgba(229, 62, 62, 0.65);
+            }
         }
 
-        .stroke-blink-once path {
-            animation: strokeBlinkOnce 1.2s ease-in-out 1;
+        .grid-blink-once {
+            animation: gridBlinkOnce 0.6s ease-in-out 1;
         }
 
         .confetti-particle {
@@ -198,41 +179,19 @@
         }
     </style>
 </head>
-<body class="min-h-screen text-slate-800 flex flex-col justify-between p-2 sm:p-4 font-sans max-w-2xl mx-auto">
+<body class="min-h-screen text-slate-800 flex flex-col justify-start p-2 sm:p-4 font-sans max-w-2xl mx-auto">
 
     <!-- 頂部用戶帳號與分頁導覽 -->
-    <header class="w-full text-center mb-0 shrink-0">
-        <div class="flex items-center justify-between bg-white px-3 sm:px-4 py-1.5 rounded-2xl shadow-md border border-slate-200 mb-2">
-            <h1 class="text-xs sm:text-sm font-black text-slate-800 tracking-wide flex items-center gap-1.5">
-                <span>✏️</span> <span class="truncate">兒童漢字筆順學習系統</span>
+    <header class="w-full text-center mb-2 shrink-0">
+        <div class="flex items-center justify-between bg-white px-4 py-1 rounded-2xl shadow-md border border-slate-200 mb-2">
+            <h1 class="text-sm sm:text-sm font-black text-child-black tracking-wide flex items-center gap-1.5">
+                <span>✏️</span> 專為兒童設計的漢字筆順學習系統 
             </h1>
-            <div id="user-info" class="flex items-center gap-1.5 shrink-0">
-                <!-- 訪客狀態：顯示 Google 一鍵登入按鈕 -->
-                <button id="btn-google-login" onclick="loginWithGoogle()" 
-                    class="flex items-center gap-1.5 bg-white hover:bg-slate-50 active:scale-95 text-slate-700 font-black text-xs px-2.5 py-1.5 rounded-full border border-slate-300 shadow-sm transition-all cursor-pointer">
-                    <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"/>
-                        <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"/>
-                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/>
-                    </svg>
-                    <span>Google 登入</span>
-                </button>
-
-                <!-- 已登入狀態：顯示頭貼、名稱與登出按鈕 (預設隱藏) -->
-                <div id="user-logged-in-box" class="hidden flex items-center gap-1.5 bg-blue-50 text-child-blue px-2.5 py-1 rounded-full border border-blue-200">
-                    <img id="user-avatar" src="" alt="頭像" class="w-4 h-4 rounded-full hidden object-cover">
-                    <span id="user-display" class="text-xs font-black max-w-[90px] sm:max-w-[130px] truncate">學員</span>
-                    <button onclick="logoutUser()" title="登出帳號" class="text-[11px] font-bold text-slate-400 hover:text-red-500 ml-1 pl-1.5 border-l border-blue-200 cursor-pointer">
-                        登出
-                    </button>
-                </div>
+            <div id="user-info" class="flex items-center gap-2">
+                <span id="user-display" class="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full border border-slate-200">
+                    👤 訪客模式
+                </span>
             </div>
-        </div>
-
-        <!-- 輕量浮動提示條 (取代 alert) -->
-        <div id="toast-banner" class="hidden fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-slate-800/95 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-2xl shadow-xl border border-slate-600 transition-all">
-            <span id="toast-message"></span>
         </div>
 
         <!-- 四大主分頁選單按鈕 -->
@@ -257,7 +216,7 @@
     </header>
 
     <!-- 1 & 2. 筆順練習 / 筆順挑戰 主要區域 -->
-    <main id="main-learning-view" class="w-full bg-white p-1 sm:p-1 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col items-center justify-center my-auto gap-3">
+    <main id="main-learning-view" class="w-full bg-white p-1 sm:p-1 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col items-center justify-center mb-auto gap-3">
         
         <!-- 輸入欄與功能區 (垂直置中排版) -->
         <div class="w-full flex items-center justify-center gap-2.5 p-2 bg-slate-50 rounded-2xl border border-slate-200">
@@ -337,26 +296,62 @@
     </main>
 
     <!-- 3. 筆順競賽分頁 (隱藏狀態) -->
-    <div id="tab-competition-view" class="hidden w-full bg-white p-3 sm:p-5 pt-0 sm:pt-1 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col gap-4">
-        <div class="bg-gradient-to-r from-orange-400 to-amber-500 p-3 rounded-2xl text-white text-center shadow-md">
-            <h2 class="text-lg font-black tracking-wide">⚔️ 零容錯筆順挑戰競賽 ⚔️</h2>
-            <p class="text-xs mt-1 opacity-95">選擇等級後開始挑戰吧！</p>
+    <div id="tab-competition-view" class="hidden w-full bg-white p-3 sm:p-5 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col gap-4 mb-auto">
+        <!-- 競賽首頁區塊 (包含橫幅、等級選擇、三欄英雄榜) -->
+        <div id="comp-home-section" class="flex flex-col gap-4">
+            <div class="bg-gradient-to-r from-orange-400 to-amber-500 p-3 rounded-2xl text-white text-center shadow-md">
+                <h2 class="text-lg font-black tracking-wide">⚔️ 選擇等級來進行挑戰吧! ⚔️</h2>
+                <p class="text-sm mt-1 opacity-95">※累計三次錯誤後競賽結束。以Google帳號登入，可保留最佳成績。</p>
+            </div>
+
+            <!-- 等級選擇器 -->
+            <div id="comp-level-selector" class="flex justify-center gap-3">
+                <button onclick="startCompetition('easy')" class="btn-3d bg-emerald-500 text-white font-black py-2.5 px-5 rounded-xl text-base border border-emerald-600">初級</button>
+                <button onclick="startCompetition('medium')" class="btn-3d bg-blue-500 text-white font-black py-2.5 px-5 rounded-xl text-base border border-blue-600">中級</button>
+                <button onclick="startCompetition('hard')" class="btn-3d bg-purple-500 text-white font-black py-2.5 px-5 rounded-xl text-base border border-purple-600">高級</button>
+            </div>
+
+            <!-- 三欄式排行榜面板 (初級 / 中級 / 高級) -->
+            <div id="comp-leaderboard-panel" class="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                <h3 class="text-sm font-black text-slate-700 mb-3 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-trophy text-amber-500"></i> 全站競賽英雄榜 (各等級前 10 名)
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                    <!-- 初級榜 -->
+                    <div class="bg-white p-2.5 rounded-xl border border-emerald-200 shadow-sm">
+                        <div class="font-black text-emerald-700 text-center pb-1.5 mb-1.5 border-b border-emerald-100">🌱 初級英雄榜</div>
+                        <div id="leaderboard-easy" class="flex flex-col gap-1 max-h-48 overflow-y-auto">
+                            <div class="text-center text-slate-400 py-2">載入中...</div>
+                        </div>
+                    </div>
+                    <!-- 中級榜 -->
+                    <div class="bg-white p-2.5 rounded-xl border border-blue-200 shadow-sm">
+                        <div class="font-black text-blue-700 text-center pb-1.5 mb-1.5 border-b border-blue-100">🚀 中級英雄榜</div>
+                        <div id="leaderboard-medium" class="flex flex-col gap-1 max-h-48 overflow-y-auto">
+                            <div class="text-center text-slate-400 py-2">載入中...</div>
+                        </div>
+                    </div>
+                    <!-- 高級榜 -->
+                    <div class="bg-white p-2.5 rounded-xl border border-purple-200 shadow-sm">
+                        <div class="font-black text-purple-700 text-center pb-1.5 mb-1.5 border-b border-purple-100">👑 高級英雄榜</div>
+                        <div id="leaderboard-hard" class="flex flex-col gap-1 max-h-48 overflow-y-auto">
+                            <div class="text-center text-slate-400 py-2">載入中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- 等級選擇器 -->
-        <div id="comp-level-selector" class="flex justify-center gap-2">
-            <button onclick="startCompetition('easy')" class="btn-3d bg-emerald-500 text-white font-bold py-2 px-3 rounded-xl text-xs">🌱 初級</button>
-            <button onclick="startCompetition('medium')" class="btn-3d bg-blue-500 text-white font-bold py-2 px-3 rounded-xl text-xs">⭐ 中級</button>
-            <button onclick="startCompetition('hard')" class="btn-3d bg-purple-500 text-white font-bold py-2 px-3 rounded-xl text-xs">🔥 高級</button>
-        </div>
-
-        <!-- 競賽專用米字格與提示區域 (預設隱藏) -->
+        <!-- 競賽專用米字格與提示區域 (開始競賽後顯示) -->
         <div id="comp-play-area" class="hidden flex flex-col items-center gap-3 w-full">
-            <!-- 提示卡片 -->
-            <div class="w-full bg-amber-50 border-2 border-amber-400/60 rounded-2xl py-2 px-4 text-center shadow-sm">
-                <p id="comp-feedback-text" class="text-sm sm:text-base font-black text-amber-900 tracking-wide">
-                    準備好了嗎？請在米字格中寫出筆順！
+            <!-- 說明列 (左側顯示累計錯誤與題目，右側獨立區塊顯示目前得分) -->
+            <div class="w-full bg-amber-50 border-2 border-amber-400/60 rounded-2xl p-2 sm:px-3 flex items-center justify-between gap-2 shadow-sm">
+                <p id="comp-feedback-text" class="text-xs sm:text-sm font-black text-slate-900 tracking-wide text-center flex-1">
+                    累計錯誤 0 / 3 次 ｜ 準備中...
                 </p>
+                <div class="bg-amber-600 text-white px-2.5 py-1 rounded-xl font-black text-xs sm:text-sm shrink-0 shadow-sm">
+                    目前得分：<span id="comp-score-display">0</span> 分
+                </div>
             </div>
 
             <!-- 米字格畫布 -->
@@ -368,28 +363,18 @@
 
             <!-- 專用控制按鈕 (重新開始與結束競賽) -->
             <div class="w-full max-w-[300px] flex gap-2">
-                <button onclick="restartCompetition()" class="flex-1 btn-3d bg-child-orange text-white font-black py-2 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1 border border-orange-600">
+                <button onclick="restartCompetition()" class="flex-1 btn-3d bg-child-orange text-black font-black py-2 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1 border border-orange-600">
                     <i class="fa-solid fa-rotate-right"></i> 重新開始
                 </button>
-                <button onclick="quitCompetition()" class="flex-1 btn-3d bg-slate-500 text-white font-black py-2 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1 border border-slate-600">
+                <button onclick="quitCompetition()" class="flex-1 btn-3d bg-child-green text-black font-black py-2 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1 border border-slate-600">
                     <i class="fa-solid fa-door-open"></i> 結束競賽
                 </button>
-            </div>
-        </div>
-
-        <!-- 排行榜面板 -->
-        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200">
-            <h3 class="text-sm font-black text-slate-700 mb-2 flex items-center gap-1.5">
-                <i class="fa-solid fa-trophy text-amber-500"></i> 全站競賽前 10 名英雄榜
-            </h3>
-            <div id="leaderboard-list" class="flex flex-col gap-1.5 max-h-48 overflow-y-auto text-xs">
-                <div class="text-center text-slate-400 py-3">載入排行榜中...</div>
             </div>
         </div>
     </div>
 
     <!-- 4. 我的成就字庫分頁 (隱藏狀態) -->
-    <div id="tab-vault-view" class="hidden w-full bg-white p-3 sm:p-5 pt-0 sm:pt-1 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col gap-4">
+    <div id="tab-vault-view" class="hidden w-full bg-white p-3 sm:p-5 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col gap-4 mb-auto">
         <!-- 頂部成就計數卡 -->
         <div class="bg-gradient-to-r from-amber-300 to-yellow-500 p-4 rounded-2xl text-slate-900 text-center shadow-md flex items-center justify-around">
             <div class="text-4xl">🏆</div>
@@ -431,31 +416,14 @@
         let isCompeting = false;
         let compLevel = 'easy';
         let compScore = 0;
+        let compMistakes = 0;
+        let compCompletedStrokes = 0;
         let compWordBank = [];
-        // 預設字庫（作為雲端載入前的備援）
-        let WORD_BANKS = {
+        const WORD_BANKS = {
             easy: ['人', '大', '小', '木', '口', '日', '月', '山', '水', '火'],
             medium: ['永', '福', '好', '學', '習', '春', '喜', '飛', '花', '愛'],
             hard: ['龍', '龜', '鳳', '聽', '讀', '禮', '藝', '繁', '靈', '慶']
         };
-
-        // 從 Firestore 讀取雲端競賽題庫 (word_banks)
-        async function loadCloudWordBanks() {
-            if (!window.db || !window.getDoc || !window.doc) return;
-            const levels = ['easy', 'medium', 'hard'];
-            for (const level of levels) {
-                try {
-                    const docRef = window.doc(window.db, 'word_banks', level);
-                    const docSnap = await window.getDoc(docRef);
-                    if (docSnap.exists() && Array.isArray(docSnap.data().words) && docSnap.data().words.length > 0) {
-                        WORD_BANKS[level] = docSnap.data().words;
-                        console.log(`✅ 成功載入雲端題庫 [${level}]:`, WORD_BANKS[level]);
-                    }
-                } catch (e) {
-                    console.warn(`⚠️ 載入雲端題庫 [${level}] 失敗，將使用預設題庫:`, e);
-                }
-            }
-        }
 
         // 本機與雲端成就字庫 Array
         let unlockedVault = new Set();
@@ -477,52 +445,15 @@
             // 初始化雲端 Auth 與監聽
             if (window.initAuth) window.initAuth();
 
-            window.onUserLogin = async function(user) {
-                const loginBtn = document.getElementById('btn-google-login');
-                const loggedInBox = document.getElementById('user-logged-in-box');
+            window.onUserLogin = function(user) {
                 const userDisplay = document.getElementById('user-display');
-                const userAvatar = document.getElementById('user-avatar');
-
-                if (user && !user.isAnonymous) {
-                    // Google 正式帳號登入
-                    if (loginBtn) loginBtn.classList.add('hidden');
-                    if (loggedInBox) loggedInBox.classList.remove('hidden');
-                    if (userDisplay) {
-                        userDisplay.innerText = user.displayName || user.email || 'Google 學員';
-                    }
-                    if (userAvatar && user.photoURL) {
-                        userAvatar.src = user.photoURL;
-                        userAvatar.classList.remove('hidden');
-                    } else if (userAvatar) {
-                        userAvatar.classList.add('hidden');
-                    }
-                } else {
-                    // 訪客模式 (匿名或未登入)
-                    if (loginBtn) loginBtn.classList.remove('hidden');
-                    if (loggedInBox) loggedInBox.classList.add('hidden');
+                if (userDisplay) {
+                    const email = user.email || (user.isAnonymous ? '匿名學童' : '已知學員');
+                    userDisplay.innerText = `👤 ${email}`;
                 }
-
-                // 切換帳號時重新清空並載入該帳號專屬的雲端字庫
-                unlockedVault.clear();
-                loadCloudWordBanks();
-                await syncCloudVault();
-                if (currentTab === 'vault') renderVaultGrid();
+                syncCloudVault();
                 listenLeaderboard();
             };
-        };
-
-        // 輕量提示視窗控制
-        let toastTimer = null;
-        window.showToast = function(msg) {
-            const banner = document.getElementById('toast-banner');
-            const textEl = document.getElementById('toast-message');
-            if (!banner || !textEl) return;
-            textEl.innerText = msg;
-            banner.classList.remove('hidden');
-            clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => {
-                banner.classList.add('hidden');
-            }, 3500);
         };
 
         // 頁籤切換控制
@@ -539,6 +470,9 @@
             document.getElementById('main-learning-view').classList.add('hidden');
             document.getElementById('tab-competition-view').classList.add('hidden');
             document.getElementById('tab-vault-view').classList.add('hidden');
+
+            // 離開或重新進入競賽分頁時，一律重置為未開啟米字格的初始狀態
+            quitCompetition();
 
             if (currentTab === 'practice' || currentTab === 'challenge') {
                 document.getElementById('main-learning-view').classList.remove('hidden');
@@ -663,9 +597,13 @@
         function startCompetition(level) {
             compLevel = level;
             compScore = 0;
+            compMistakes = 0;
+            compCompletedStrokes = 0;
             isCompeting = true;
             compWordBank = [...WORD_BANKS[level]].sort(() => Math.random() - 0.5);
 
+            updateCompScoreUI();
+            document.getElementById('comp-home-section').classList.add('hidden');
             document.getElementById('comp-play-area').classList.remove('hidden');
             nextCompetitionWord();
         }
@@ -676,11 +614,32 @@
 
         function quitCompetition() {
             isCompeting = false;
+            compScore = 0;
+            compMistakes = 0;
+            compCompletedStrokes = 0;
+            compCurrentChar = '';
             document.getElementById('comp-play-area').classList.add('hidden');
+            document.getElementById('comp-home-section').classList.remove('hidden');
             if (compWriter) {
                 document.getElementById('comp-character-target').innerHTML = '';
                 compWriter = null;
             }
+        }
+
+        function updateCompScoreUI() {
+            const scoreEl = document.getElementById('comp-score-display');
+            if (scoreEl) scoreEl.innerText = compScore;
+        }
+
+        function triggerCompRedFlash() {
+            const grid = document.getElementById('comp-grid-container');
+            if (!grid) return;
+            grid.classList.remove('grid-blink-once');
+            void grid.offsetWidth;
+            grid.classList.add('grid-blink-once');
+            setTimeout(() => {
+                grid.classList.remove('grid-blink-once');
+            }, 650);
         }
 
         function nextCompetitionWord() {
@@ -688,13 +647,16 @@
                 endCompetition(true);
                 return;
             }
+            compCompletedStrokes = 0;
             compCurrentChar = compWordBank.pop();
-            updateCompFeedback(`🏆 得分: ${compScore} 分 ｜ 請寫出「${compCurrentChar}」`);
+            updateCompFeedback(`累計錯誤 ${compMistakes} / 3 次 ｜ 請寫出「${compCurrentChar}」`);
             initCompWriter(compCurrentChar);
         }
 
         function initCompWriter(char) {
             const container = document.getElementById('comp-character-target');
+            const grid = document.getElementById('comp-grid-container');
+            if (grid) grid.classList.remove('grid-blink-once');
             container.innerHTML = '';
             const gridWidth = document.getElementById('comp-grid-container').clientWidth;
 
@@ -707,14 +669,27 @@
                     delayBetweenStrokes: 200,
                     strokeColor: '#2C3E50',
                     outlineColor: '#CBD5E1',
+                    drawingColor: '#333333',
+                    drawingWidth: 4,
                     showOutline: true,
                     showCharacter: false,
-                    highlightColor: '#FF66C4',
+                    onCorrectStroke: function(strokeData) {
+                        compCompletedStrokes = strokeData.strokeNum + 1;
+                    },
                     onMistake: function() {
-                        endCompetition(false);
+                        if (!isCompeting) return;
+                        compMistakes++;
+                        triggerCompRedFlash();
+                        if (compMistakes >= 3) {
+                            endCompetition(false);
+                        } else {
+                            updateCompFeedback(`累計錯誤 ${compMistakes} / 3 次 ｜ 請寫出「${compCurrentChar}」`);
+                        }
                     },
                     onComplete: function() {
+                        if (!isCompeting) return;
                         compScore++;
+                        updateCompScoreUI();
                         nextCompetitionWord();
                     }
                 });
@@ -724,11 +699,47 @@
             }
         }
 
+        function renderCompMistakeResult() {
+            const container = document.getElementById('comp-character-target');
+            if (!container || !compCurrentChar) return;
+            const completedCount = compCompletedStrokes;
+            const gridWidth = document.getElementById('comp-grid-container').clientWidth;
+            container.innerHTML = '';
+
+            // 載入字形筆畫資料，將已完成筆畫渲染為黑色，未完成筆畫渲染為紅色
+            HanziWriter.loadCharacterData(compCurrentChar).then(charData => {
+                if (!charData || !charData.strokes) return;
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('width', gridWidth);
+                svg.setAttribute('height', gridWidth);
+
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                const transformData = HanziWriter.getScalingTransform(gridWidth, gridWidth, 15);
+                group.setAttribute('transform', transformData.transform);
+
+                charData.strokes.forEach((strokePath, idx) => {
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', strokePath);
+                    path.setAttribute('fill', idx < completedCount ? '#2C3E50' : '#E53E3E');
+                    group.appendChild(path);
+                });
+
+                svg.appendChild(group);
+                container.appendChild(svg);
+            }).catch(err => console.warn('載入錯誤結果筆畫失敗:', err));
+        }
+
         function endCompetition(isAllClear) {
             isCompeting = false;
+            if (compWriter) {
+                compWriter.cancelQuiz();
+            }
+            if (!isAllClear) {
+                renderCompMistakeResult();
+            }
             const msg = isAllClear 
-                ? `🔥 完全破關！獲得 ${compScore} 分！`
-                : `💥 寫錯筆畫囉！競賽結束，得分: ${compScore} 分！`;
+                ? `🔥 完全破關！累計錯誤 ${compMistakes} 次`
+                : `💥 累計錯誤 3 次，競賽結束！`;
             
             updateCompFeedback(msg);
             saveScoreToCloud(compScore, compLevel);
@@ -769,17 +780,19 @@
         async function saveScoreToCloud(score, level) {
             if (window.currentUser && window.db) {
                 try {
-                    const playerName = !window.currentUser.isAnonymous 
-                        ? (window.currentUser.displayName || window.currentUser.email || 'Google 學員')
-                        : '訪客學童';
-                    const leaderRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'leaderboard', window.currentUser.uid);
-                    await window.setDoc(leaderRef, {
-                        uid: window.currentUser.uid,
-                        name: playerName,
-                        score: score,
-                        level: level,
-                        updatedAt: Date.now()
-                    }, { merge: true });
+                    const docId = `${window.currentUser.uid}_${level}`;
+                    const leaderRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'leaderboard', docId);
+                    const snap = await window.getDoc(leaderRef);
+                    const prevScore = snap.exists() ? (snap.data().score || 0) : 0;
+                    if (score >= prevScore) {
+                        await window.setDoc(leaderRef, {
+                            uid: window.currentUser.uid,
+                            name: window.currentUser.displayName || window.currentUser.email || '學童玩家',
+                            score: score,
+                            level: level,
+                            updatedAt: Date.now()
+                        }, { merge: true });
+                    }
                 } catch(e) {}
             }
         }
@@ -789,25 +802,31 @@
             try {
                 const colRef = window.collection(window.db, 'artifacts', window.appId, 'public', 'data', 'leaderboard');
                 window.onSnapshot(colRef, (snapshot) => {
-                    let list = [];
-                    snapshot.forEach(doc => list.push(doc.data()));
-                    list.sort((a, b) => b.score - a.score);
-                    renderLeaderboard(list.slice(0, 10));
-                });
+                    let allList = [];
+                    snapshot.forEach(doc => allList.push(doc.data()));
+                    ['easy', 'medium', 'hard'].forEach(lvl => {
+                        const filtered = allList
+                            .filter(item => (item.level || 'easy') === lvl)
+                            .sort((a, b) => b.score - a.score)
+                            .slice(0, 10);
+                        renderLevelLeaderboard(`leaderboard-${lvl}`, filtered);
+                    });
+                }, (err) => console.warn('Leaderboard snapshot error:', err));
             } catch(e) {}
         }
 
-        function renderLeaderboard(data) {
-            const container = document.getElementById('leaderboard-list');
+        function renderLevelLeaderboard(containerId, data) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
             if (!data || data.length === 0) {
-                container.innerHTML = '<div class="text-center text-slate-400 py-3">尚無數據，快來挑戰！</div>';
+                container.innerHTML = '<div class="text-center text-slate-400 py-3">尚無紀錄</div>';
                 return;
             }
             container.innerHTML = data.map((item, index) => `
-                <div class="flex items-center justify-between p-2 bg-white rounded-xl border border-slate-200">
-                    <span class="font-black text-slate-700 w-6">#${index + 1}</span>
-                    <span class="font-bold text-slate-800 flex-1 truncate px-2">${item.name}</span>
-                    <span class="font-black text-child-pink">${item.score} 分</span>
+                <div class="flex items-center justify-between p-1.5 bg-slate-50 rounded-lg border border-slate-100">
+                    <span class="font-black text-slate-600 w-5">#${index + 1}</span>
+                    <span class="font-bold text-slate-800 flex-1 truncate px-1">${item.name}</span>
+                    <span class="font-black text-child-pink shrink-0">${item.score} 分</span>
                 </div>
             `).join('');
         }
