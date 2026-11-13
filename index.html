@@ -17,7 +17,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase Config
@@ -47,12 +47,38 @@
         window.collection = collection;
         window.onSnapshot = onSnapshot;
 
+        // Google 一鍵登入功能
+        const googleProvider = new GoogleAuthProvider();
+        window.loginWithGoogle = async function() {
+            try {
+                await signInWithPopup(auth, googleProvider);
+                if (window.showToast) window.showToast("🎉 Google 帳號登入成功！雲端字庫已同步");
+            } catch (error) {
+                console.warn("Google 登入提示:", error);
+                if (error.code === 'auth/popup-closed-by-user') return;
+                if (window.showToast) {
+                    window.showToast("⚠️ 登入未完成，請確認 Firebase 已開啟 Google 登入並授權目前網域");
+                }
+            }
+        };
+
+        // 登出並切回訪客模式
+        window.logoutUser = async function() {
+            try {
+                await signOut(auth);
+                if (window.showToast) window.showToast("👋 已登出，切換回訪客模式");
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.warn("登出失敗:", error);
+            }
+        };
+
         // 初始化登入狀態
         window.initAuth = async function() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
+                } else if (!auth.currentUser) {
                     await signInAnonymously(auth);
                 }
             } catch(e) {
@@ -61,10 +87,8 @@
         };
 
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                window.currentUser = user;
-                if (window.onUserLogin) window.onUserLogin(user);
-            }
+            window.currentUser = user;
+            if (window.onUserLogin) window.onUserLogin(user);
         });
     </script>
 
@@ -178,15 +202,37 @@
 
     <!-- 頂部用戶帳號與分頁導覽 -->
     <header class="w-full text-center mb-0 shrink-0">
-        <div class="flex items-center justify-between bg-white px-4 py-1 rounded-2xl shadow-md border border-slate-200 mb-2">
-            <h1 class="text-sm sm:text-sm font-black text-child-black tracking-wide flex items-center gap-1.5">
-                <span>✏️</span> 專為兒童設計的漢字筆順學習系統 
+        <div class="flex items-center justify-between bg-white px-3 sm:px-4 py-1.5 rounded-2xl shadow-md border border-slate-200 mb-2">
+            <h1 class="text-xs sm:text-sm font-black text-slate-800 tracking-wide flex items-center gap-1.5">
+                <span>✏️</span> <span class="truncate">兒童漢字筆順學習系統</span>
             </h1>
-            <div id="user-info" class="flex items-center gap-2">
-                <span id="user-display" class="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full border border-slate-200">
-                    👤 訪客模式
-                </span>
+            <div id="user-info" class="flex items-center gap-1.5 shrink-0">
+                <!-- 訪客狀態：顯示 Google 一鍵登入按鈕 -->
+                <button id="btn-google-login" onclick="loginWithGoogle()" 
+                    class="flex items-center gap-1.5 bg-white hover:bg-slate-50 active:scale-95 text-slate-700 font-black text-xs px-2.5 py-1.5 rounded-full border border-slate-300 shadow-sm transition-all cursor-pointer">
+                    <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"/>
+                        <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/>
+                    </svg>
+                    <span>Google 登入</span>
+                </button>
+
+                <!-- 已登入狀態：顯示頭貼、名稱與登出按鈕 (預設隱藏) -->
+                <div id="user-logged-in-box" class="hidden flex items-center gap-1.5 bg-blue-50 text-child-blue px-2.5 py-1 rounded-full border border-blue-200">
+                    <img id="user-avatar" src="" alt="頭像" class="w-4 h-4 rounded-full hidden object-cover">
+                    <span id="user-display" class="text-xs font-black max-w-[90px] sm:max-w-[130px] truncate">學員</span>
+                    <button onclick="logoutUser()" title="登出帳號" class="text-[11px] font-bold text-slate-400 hover:text-red-500 ml-1 pl-1.5 border-l border-blue-200 cursor-pointer">
+                        登出
+                    </button>
+                </div>
             </div>
+        </div>
+
+        <!-- 輕量浮動提示條 (取代 alert) -->
+        <div id="toast-banner" class="hidden fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-slate-800/95 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-2xl shadow-xl border border-slate-600 transition-all">
+            <span id="toast-message"></span>
         </div>
 
         <!-- 四大主分頁選單按鈕 -->
@@ -431,16 +477,52 @@
             // 初始化雲端 Auth 與監聽
             if (window.initAuth) window.initAuth();
 
-            window.onUserLogin = function(user) {
+            window.onUserLogin = async function(user) {
+                const loginBtn = document.getElementById('btn-google-login');
+                const loggedInBox = document.getElementById('user-logged-in-box');
                 const userDisplay = document.getElementById('user-display');
-                if (userDisplay) {
-                    const email = user.email || (user.isAnonymous ? '匿名學童' : '已知學員');
-                    userDisplay.innerText = `👤 ${email}`;
+                const userAvatar = document.getElementById('user-avatar');
+
+                if (user && !user.isAnonymous) {
+                    // Google 正式帳號登入
+                    if (loginBtn) loginBtn.classList.add('hidden');
+                    if (loggedInBox) loggedInBox.classList.remove('hidden');
+                    if (userDisplay) {
+                        userDisplay.innerText = user.displayName || user.email || 'Google 學員';
+                    }
+                    if (userAvatar && user.photoURL) {
+                        userAvatar.src = user.photoURL;
+                        userAvatar.classList.remove('hidden');
+                    } else if (userAvatar) {
+                        userAvatar.classList.add('hidden');
+                    }
+                } else {
+                    // 訪客模式 (匿名或未登入)
+                    if (loginBtn) loginBtn.classList.remove('hidden');
+                    if (loggedInBox) loggedInBox.classList.add('hidden');
                 }
-                loadCloudWordBanks(); // 載入您建立的 Firestore 雲端競賽題庫
-                syncCloudVault();
+
+                // 切換帳號時重新清空並載入該帳號專屬的雲端字庫
+                unlockedVault.clear();
+                loadCloudWordBanks();
+                await syncCloudVault();
+                if (currentTab === 'vault') renderVaultGrid();
                 listenLeaderboard();
             };
+        };
+
+        // 輕量提示視窗控制
+        let toastTimer = null;
+        window.showToast = function(msg) {
+            const banner = document.getElementById('toast-banner');
+            const textEl = document.getElementById('toast-message');
+            if (!banner || !textEl) return;
+            textEl.innerText = msg;
+            banner.classList.remove('hidden');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                banner.classList.add('hidden');
+            }, 3500);
         };
 
         // 頁籤切換控制
@@ -687,10 +769,13 @@
         async function saveScoreToCloud(score, level) {
             if (window.currentUser && window.db) {
                 try {
+                    const playerName = !window.currentUser.isAnonymous 
+                        ? (window.currentUser.displayName || window.currentUser.email || 'Google 學員')
+                        : '訪客學童';
                     const leaderRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'leaderboard', window.currentUser.uid);
                     await window.setDoc(leaderRef, {
                         uid: window.currentUser.uid,
-                        name: window.currentUser.email || '學童玩家',
+                        name: playerName,
                         score: score,
                         level: level,
                         updatedAt: Date.now()
