@@ -211,7 +211,7 @@
     <header class="w-full text-center mb-2 shrink-0">
         <div class="flex items-center justify-between bg-white px-3 sm:px-4 py-1.5 rounded-2xl shadow-md border border-slate-200 mb-2 gap-2">
             <h1 class="text-xs sm:text-sm font-black text-child-black tracking-wide flex items-center gap-1.5 truncate">
-                <span>✏️</span> 專為兒童設計的漢字筆順學習系統 
+                專為兒童學習漢字筆順而設計 
             </h1>
             <div id="user-info" class="flex items-center gap-1.5 shrink-0">
                 <span id="user-display" class="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full border border-slate-200 flex items-center gap-1">
@@ -259,7 +259,7 @@
         <!-- 輸入欄與功能區 (垂直置中排版) -->
         <div class="w-full flex items-center justify-center gap-2.5 p-2 bg-slate-50 rounded-2xl border border-slate-200">
             <div class="flex-1 max-w-[200px]">
-                <input type="text" id="char-input" maxlength="1" placeholder="輸入單字" 
+                <input type="text" id="char-input" maxlength="1" placeholder="點擊輸入漢字" 
                     class="w-full text-center text-2xl font-black border-2 border-child-blue rounded-xl p-1 bg-blue-50/30 text-child-blue focus:outline-none focus:ring-2 focus:ring-child-blue shadow-inner h-11"
                     oninput="handleInputChar(this.value)">
             </div>
@@ -645,7 +645,7 @@
             // 檢查是否為標準中文字元
             const isChineseChar = /^[\u4e00-\u9fa5]$/.test(char);
             if (!isChineseChar) {
-                updateFeedback('請輸入一個標準漢字。', 'text-child-pink');
+                updateFeedback('請輸入一個漢字。', 'text-child-pink');
                 return;
             }
 
@@ -984,7 +984,7 @@
             const isChinese = /^[\u4e00-\u9fa5]$/.test(val);
 
             if (!val || !isChinese) {
-                updateFeedback('請輸入一個標準漢字。');
+                updateFeedback('請輸入一個漢字。');
             } else {
                 if (currentTab === 'practice') {
                     updateFeedback('請點擊「跟寫」或「示範」練習筆順喔!');
