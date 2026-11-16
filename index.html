@@ -10,8 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts: Playful font -->
-    <link href="https://fonts.googleapis.com/css2?family=Mochiyom+Pop+One&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Playful font & LXGW WenKai TC (霞鶩文楷繁體) -->
+    <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@700&family=Mochiyom+Pop+One&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
     <!-- Tone.js for Web Audio SFX -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 
@@ -191,6 +191,14 @@
             animation: gridBlinkOnce 0.6s ease-in-out 1;
         }
 
+        /* 字庫專用：第 1 款 LXGW WenKai TC（霞鶩文楷繁體）加粗毛筆風格 */
+        .vault-brush-font {
+            font-family: 'LXGW WenKai TC', 'BiauKai', 'DFKai-SB', '標楷體', serif;
+            font-weight: 700;
+            -webkit-text-stroke: 0.75px currentColor;
+            line-height: 1.1;
+        }
+
         .confetti-particle {
             position: absolute;
             pointer-events: none;
@@ -235,20 +243,20 @@
         <!-- 四大主分頁選單按鈕 -->
         <nav class="grid grid-cols-4 gap-1.5 sm:gap-2.5">
             <button onclick="switchTab('tab-practice')" id="nav-practice" 
-                class="tab-btn btn-3d py-2 px-1 rounded-xl font-black text-sm sm:text-base bg-child-blue text-white border border-blue-600 flex items-center justify-center gap-1">
+                class="tab-btn btn-3d py-3 px-1 rounded-xl font-black text-sm sm:text-base bg-child-blue text-white border border-blue-600 flex items-center justify-center gap-1">
                 <span>✏️</span> 練習
             </button>
             <button onclick="switchTab('tab-challenge')" id="nav-challenge" 
-                class="tab-btn btn-3d py-2 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1">
+                class="tab-btn btn-3d py-3 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1">
                 <span>🎯</span> 挑戰
             </button>
             <button onclick="switchTab('tab-competition')" id="nav-competition" 
-                class="tab-btn btn-3d py-2 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1">
+                class="tab-btn btn-3d py-3 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1">
                 <span>⚔️</span> 競賽
             </button>
             <button onclick="switchTab('tab-vault')" id="nav-vault" 
-                class="tab-btn btn-3d py-2 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1">
-                <span>🏆</span> 字庫
+                class="tab-btn btn-3d py-3 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1">
+                <span>📖</span> 字庫
             </button>
         </nav>
     </header>
@@ -429,26 +437,28 @@
     </div>
 
     <!-- 4. 我的成就字庫分頁 (隱藏狀態) -->
-    <div id="tab-vault-view" class="hidden w-full bg-white p-3 sm:p-5 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col gap-4 mb-auto">
+    <div id="tab-vault-view" class="hidden w-full bg-white p-3 sm:p-5 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col gap-3 mb-auto">
         <!-- 頂部成就計數卡 -->
-        <div class="bg-gradient-to-r from-amber-300 to-yellow-500 p-4 rounded-2xl text-slate-900 text-center shadow-md flex items-center justify-around">
-            <div class="text-4xl">🏆</div>
-            <div>
-                <h3 class="text-xs font-bold text-amber-900">累計解鎖漢字</h3>
-                <span id="vault-count" class="text-3xl font-black text-slate-900">0</span>
-                <span class="text-xs font-bold"> 個字</span>
+        <div class="bg-gradient-to-r from-amber-300 to-yellow-500 p-4 rounded-2xl text-slate-900 shadow-md flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5">
+                <span class="text-lg sm:text-xl font-black text-slate-900">累計捕獲:</span>
+                <span id="vault-count" class="text-2xl sm:text-3xl font-black text-rose-600 bg-white/95 px-3 py-0.5 rounded-xl border-2 border-white shadow-[0_3px_8px_rgba(180,83,9,0.35)] drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]">0</span>
+                <span class="text-lg sm:text-xl font-black text-slate-900">個漢字卡牌</span>
             </div>
-            <div id="vault-badge" class="bg-white/80 px-3 py-1 rounded-full text-xs font-black text-amber-800 shadow-sm">
-                新手啟蒙 🏅
+            <div class="bg-white/85 px-3 py-1.5 rounded-full text-sm sm:text-base font-black text-amber-900 shadow-sm flex items-center gap-1">
+                <span>目前等級:</span>
+                <span id="vault-badge">漢字小學生 🏅</span>
             </div>
         </div>
 
-        <!-- 已解鎖漢字網格 -->
-        <div id="vault-grid" class="grid grid-cols-4 sm:grid-cols-5 gap-2.5 max-h-80 overflow-y-auto p-1">
-            <div class="col-span-full text-center text-slate-400 py-6 text-sm font-medium">
-                尚未解鎖漢字，快到「筆順挑戰」過關解鎖吧！
-            </div>
+        <!-- 固定鼓勵標語區塊 (常駐於橘色橫幅下方) -->
+        <div class="bg-amber-50/90 border border-amber-200 rounded-2xl py-2.5 px-3 text-center shadow-sm">
+            <p class="text-sm sm:text-base font-black text-slate-800">快到「筆順挑戰」闖關，一起捕獲「漢字卡牌」吧！</p>
+            <p class="text-xs sm:text-sm font-bold text-amber-800 mt-0.5">共有10個等級，等你來挑戰</p>
         </div>
+
+        <!-- 已解鎖漢字網格 (於鼓勵文字下方累積排列) -->
+        <div id="vault-grid" class="grid grid-cols-5 sm:grid-cols-6 gap-2 max-h-80 overflow-y-auto p-1"></div>
     </div>
 
     <!-- 頁尾 -->
@@ -951,14 +961,20 @@
             document.getElementById('vault-count').innerText = arr.length;
             
             const badge = document.getElementById('vault-badge');
-            if (arr.length >= 100) badge.innerText = '漢字大師 👑';
-            else if (arr.length >= 50) badge.innerText = '漢字小博士 🎓';
-            else badge.innerText = '新手啟蒙 🏅';
+            if (arr.length >= 500) badge.innerText = '漢字大宗師 👑';
+            else if (arr.length >= 300) badge.innerText = '漢字小博士 🎓';
+            else if (arr.length >= 200) badge.innerText = '漢字小達人 🌟';
+            else if (arr.length >= 100) badge.innerText = '漢字小達人 ⭐';
+            else badge.innerText = '漢字小學生 🏅';
+
+            if (arr.length === 0) {
+                grid.innerHTML = '';
+                return;
+            }
 
             grid.innerHTML = arr.map(char => `
-                <div onclick="previewVaultChar('${char}')" class="btn-3d bg-amber-50 p-2 rounded-2xl border-2 border-amber-300 text-center cursor-pointer hover:bg-amber-100">
-                    <div class="text-2xl sm:text-3xl font-black text-slate-800">${char}</div>
-                    <div class="text-[10px] text-amber-700 font-bold mt-1">已解鎖</div>
+                <div onclick="previewVaultChar('${char}')" class="btn-3d bg-amber-50 p-1 rounded-xl border-2 border-amber-300 aspect-square flex items-center justify-center cursor-pointer hover:bg-amber-100">
+                    <div class="vault-brush-font text-3xl sm:text-4xl text-slate-900 select-none">${char}</div>
                 </div>
             `).join('');
         }
