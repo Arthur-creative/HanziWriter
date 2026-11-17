@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>漢字筆順學習大挑戰網頁</title>
+    <title>兒童漢字筆順學習捕獲遊戲網頁</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Hanzi Writer CDN -->
@@ -267,7 +267,7 @@
         <!-- 輸入欄與功能區 (垂直置中排版) -->
         <div class="w-full flex items-center justify-center gap-2.5 p-2 bg-slate-50 rounded-2xl border border-slate-200">
             <div class="flex-1 max-w-[200px]">
-                <input type="text" id="char-input" maxlength="1" placeholder="點擊輸入漢字" 
+                <input type="text" id="char-input" maxlength="1" placeholder="點擊搜尋漢字" 
                     class="w-full text-center text-2xl font-black border-2 border-child-blue rounded-xl p-1 bg-blue-50/30 text-child-blue focus:outline-none focus:ring-2 focus:ring-child-blue shadow-inner h-11"
                     oninput="handleInputChar(this.value)">
             </div>
@@ -346,8 +346,8 @@
         <!-- 競賽首頁區塊 (包含橫幅、等級選擇、三欄英雄榜) -->
         <div id="comp-home-section" class="flex flex-col gap-4">
             <div class="bg-gradient-to-r from-orange-400 to-amber-500 p-3 rounded-2xl text-black text-center shadow-md">
-                <h2 class="text-lg font-black tracking-wide">⚔️ 選擇等級來進行挑戰吧! ⚔️</h2>
-                <p class="text-sm mt-1 opacity-95">※累計三次錯誤後比賽結束_登入Google帳號可保留最佳成績※</p>
+                <h2 class="text-lg font-black tracking-wide">⚔️ 選擇等級進行挑戰吧! ⚔️</h2>
+                <p class="text-sm mt-1 opacity-95">※登入Google帳號可保留最佳成績※</p>
             </div>
 
             <!-- 等級選擇器 -->
@@ -441,35 +441,59 @@
         <!-- 頂部成就計數卡 -->
         <div class="bg-gradient-to-r from-amber-300 to-yellow-500 p-4 rounded-2xl text-slate-900 shadow-md flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-1.5">
-                <span class="text-lg sm:text-xl font-black text-slate-900">累計捕獲:</span>
+                <span class="text-lg sm:text-xl font-black text-slate-900">你已捕獲:</span>
                 <span id="vault-count" class="text-2xl sm:text-3xl font-black text-rose-600 bg-white/95 px-3 py-0.5 rounded-xl border-2 border-white shadow-[0_3px_8px_rgba(180,83,9,0.35)] drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]">0</span>
-                <span class="text-lg sm:text-xl font-black text-slate-900">個漢字卡牌</span>
+                <span class="text-lg sm:text-xl font-black text-slate-900">隻漢字怪獸</span>
             </div>
             <div class="bg-white/85 px-3 py-1.5 rounded-full text-sm sm:text-base font-black text-amber-900 shadow-sm flex items-center gap-1">
-                <span>目前等級:</span>
-                <span id="vault-badge">漢字小學生 🏅</span>
+                <span>我的等級:</span>
+                <span id="vault-badge">漢字小菜鳥 🐣</span>
             </div>
         </div>
 
         <!-- 固定鼓勵標語區塊 (常駐於橘色橫幅下方) -->
         <div class="bg-amber-50/90 border border-amber-200 rounded-2xl py-2.5 px-3 text-center shadow-sm">
-            <p class="text-sm sm:text-base font-black text-slate-800">快到「筆順挑戰」闖關，一起捕獲「漢字卡牌」吧！</p>
-            <p class="text-xs sm:text-sm font-bold text-amber-800 mt-0.5">共有10個等級，等你來挑戰</p>
+            <p class="text-sm sm:text-base font-black text-slate-800">點擊「<span>🎯</span>挑戰」，一起捕獲「漢字怪獸」吧！</p>
+            <p class="text-xs sm:text-sm font-bold text-amber-800 mt-0.5">總共10個等級，等你來挑戰</p>
         </div>
 
-        <!-- 已解鎖漢字網格 (於鼓勵文字下方累積排列) -->
-        <div id="vault-grid" class="grid grid-cols-5 sm:grid-cols-6 gap-2 max-h-80 overflow-y-auto p-1"></div>
+        <!-- 全站等級英雄榜 (前 10 名) -->
+        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 class="text-sm font-black text-slate-800 mb-2 flex items-center justify-center gap-1.5">
+                <span>👑</span> 全站等級英雄榜（前 10 名）
+            </h3>
+            <div id="vault-leaderboard-list" class="flex flex-col gap-1.5 max-h-48 overflow-y-auto text-xs">
+                <div class="text-center text-slate-400 py-2">載入英雄榜中...</div>
+            </div>
+        </div>
+
+        <!-- 我的漢字怪獸字庫獨立標題與垂直捲軸區域 -->
+        <div class="bg-amber-50/40 p-3 rounded-2xl border border-amber-200/80 flex flex-col gap-2">
+            <div class="flex items-center justify-between px-1">
+                <h3 class="text-sm sm:text-base font-black text-slate-800 flex items-center gap-1.5">
+                    <span>📖</span> 我的漢字怪獸字庫
+                </h3>
+                <span class="text-[11px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">筆畫由少到多排列</span>
+            </div>
+            <!-- 已解鎖漢字網格 (垂直捲軸區域，字數多時可上下順暢滑動) -->
+            <div id="vault-grid" class="grid grid-cols-5 sm:grid-cols-6 gap-2 max-h-72 overflow-y-auto p-1"></div>
+        </div>
     </div>
 
     <!-- 頁尾 -->
     <footer class="mt-3 text-center text-xs text-slate-400 font-medium shrink-0">
-       🌟Design by LouieLucas Studio🌟
+       🌟Created by LouieLucas Studio. © 2026 All rights reserved.🌟
     </footer>
 
     <!-- JavaScript 核心邏輯 -->
     <script>
         let writer = null;
         let compWriter = null;
+        let canvas = null;
+        let ctx = null;
+        let isDrawing = false;
+        let brushColor = '#2f7fff';
+        let brushSize = 12;
         let currentChar = '永';
         let compCurrentChar = '';
         let currentTab = 'practice';
@@ -493,11 +517,36 @@
 
         // 本機與雲端成就字庫 Array
         let unlockedVault = new Set();
+        // 快取每個漢字的筆畫數以利排序
+        const charStrokeCountCache = {};
+        let vaultLeaderboardUnsub = null;
 
-        let canvas, ctx;
-        let isDrawing = false;
-        let brushColor = '#5271FF';
-        let brushSize = 12;
+        function getVaultLevelBadge(count) {
+            if (count >= 2000) return '漢字大宗師 👑';
+            if (count >= 1600) return '漢字小教授 🏛️';
+            if (count >= 1200) return '漢字小博士 🎓';
+            if (count >= 800) return '漢字小碩士 📜';
+            if (count >= 500) return '漢字小學士 📘';
+            if (count >= 300) return '漢字小達人 🌟';
+            if (count >= 150) return '漢字小班長 🎖️';
+            if (count >= 100) return '漢字小學生 🎒';
+            if (count >= 50) return '漢字小新手 🌱';
+            return '漢字小菜鳥 🐣';
+        }
+
+        async function ensureCharStrokeCounts(chars) {
+            const missing = chars.filter(c => typeof charStrokeCountCache[c] !== 'number');
+            if (missing.length === 0) return false;
+            await Promise.all(missing.map(async (c) => {
+                try {
+                    const data = await HanziWriter.loadCharacterData(c);
+                    charStrokeCountCache[c] = (data && Array.isArray(data.strokes)) ? data.strokes.length : 999;
+                } catch (e) {
+                    charStrokeCountCache[c] = 999;
+                }
+            }));
+            return true;
+        }
 
         window.showAuthNotice = function(msg) {
             const banner = document.getElementById('auth-notice-banner');
@@ -576,6 +625,7 @@
                 window.loadCloudWordBanks();
                 syncCloudVault();
                 listenLeaderboard();
+                listenVaultLeaderboard();
             };
         };
 
@@ -655,7 +705,7 @@
             // 檢查是否為標準中文字元
             const isChineseChar = /^[\u4e00-\u9fa5]$/.test(char);
             if (!isChineseChar) {
-                updateFeedback('請輸入一個漢字。', 'text-child-pink');
+                updateFeedback('請搜尋一隻漢字怪獸。', 'text-child-pink');
                 return;
             }
 
@@ -772,7 +822,7 @@
             }
             compCompletedStrokes = 0;
             compCurrentChar = compWordBank.pop();
-            updateCompFeedback(`累計錯誤 ${compMistakes} / 3 次 ｜ 請寫出「${compCurrentChar}」`);
+            updateCompFeedback(`總共3次錯誤機會 ｜ 累計錯誤 ${compMistakes} / 3 次`);
             initCompWriter(compCurrentChar);
         }
 
@@ -806,7 +856,7 @@
                         if (compMistakes >= 3) {
                             endCompetition(false);
                         } else {
-                            updateCompFeedback(`累計錯誤 ${compMistakes} / 3 次 ｜ 請寫出「${compCurrentChar}」`);
+                            updateCompFeedback(`總共3次錯誤機會 ｜ 累計錯誤 ${compMistakes} / 3 次`);
                         }
                     },
                     onComplete: function() {
@@ -882,10 +932,68 @@
                     await window.setDoc(userRef, {
                         unlocked: Array.from(unlockedVault)
                     }, { merge: true });
+                    await syncVaultLeaderboardRecord();
                 } catch(e) {
                     console.log('Vault save error:', e);
                 }
             }
+        }
+
+        async function syncVaultLeaderboardRecord() {
+            if (!window.currentUser || !window.db) return;
+            const isGoogleUser = !window.currentUser.isAnonymous;
+            const count = unlockedVault.size;
+            if (!isGoogleUser && count === 0) return;
+            try {
+                const rankRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'vault_leaderboard', window.currentUser.uid);
+                await window.setDoc(rankRef, {
+                    uid: window.currentUser.uid,
+                    name: window.currentUser.displayName || window.currentUser.email || '訪客學員',
+                    count: count,
+                    badge: getVaultLevelBadge(count),
+                    updatedAt: Date.now()
+                }, { merge: true });
+            } catch (e) {
+                console.warn('Vault leaderboard sync error:', e);
+            }
+        }
+
+        function listenVaultLeaderboard() {
+            if (!window.db || vaultLeaderboardUnsub) return;
+            try {
+                const colRef = window.collection(window.db, 'artifacts', window.appId, 'public', 'data', 'vault_leaderboard');
+                vaultLeaderboardUnsub = window.onSnapshot(colRef, (snapshot) => {
+                    const list = [];
+                    snapshot.forEach(docSnap => list.push(docSnap.data()));
+                    const top10 = list
+                        .filter(item => (item.count || 0) > 0)
+                        .sort((a, b) => (b.count || 0) - (a.count || 0))
+                        .slice(0, 10);
+                    renderVaultLeaderboard(top10);
+                }, (err) => console.warn('Vault leaderboard snapshot error:', err));
+            } catch (e) {}
+        }
+
+        function renderVaultLeaderboard(data) {
+            const container = document.getElementById('vault-leaderboard-list');
+            if (!container) return;
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="text-center text-slate-400 py-3">目前尚無上榜紀錄，快去挑戰捕獲漢字怪獸吧！</div>';
+                return;
+            }
+            container.innerHTML = data.map((item, idx) => {
+                const count = item.count || 0;
+                const badgeText = getVaultLevelBadge(count);
+                const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+                return `
+                    <div class="flex items-center justify-between gap-2 px-2.5 py-1.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
+                        <span class="font-black text-amber-600 w-7 shrink-0 text-center">${rankIcon}</span>
+                        <span class="font-bold text-slate-800 flex-1 truncate">${item.name || '學員'}</span>
+                        <span class="font-black text-amber-900 bg-amber-100/90 px-2 py-0.5 rounded-full shrink-0">${badgeText}</span>
+                        <span class="font-black text-rose-600 shrink-0 w-14 text-right">${count} 隻</span>
+                    </div>
+                `;
+            }).join('');
         }
 
         async function syncCloudVault() {
@@ -895,6 +1003,9 @@
                     const snap = await window.getDoc(userRef);
                     if (snap.exists() && snap.data().unlocked) {
                         snap.data().unlocked.forEach(c => unlockedVault.add(c));
+                    }
+                    if (unlockedVault.size > 0) {
+                        await syncVaultLeaderboardRecord();
                     }
                     if (currentTab === 'vault') renderVaultGrid();
                 } catch(e) {}
@@ -961,22 +1072,31 @@
             document.getElementById('vault-count').innerText = arr.length;
             
             const badge = document.getElementById('vault-badge');
-            if (arr.length >= 500) badge.innerText = '漢字大宗師 👑';
-            else if (arr.length >= 300) badge.innerText = '漢字小博士 🎓';
-            else if (arr.length >= 200) badge.innerText = '漢字小達人 🌟';
-            else if (arr.length >= 100) badge.innerText = '漢字小達人 ⭐';
-            else badge.innerText = '漢字小學生 🏅';
+            badge.innerText = getVaultLevelBadge(arr.length);
 
             if (arr.length === 0) {
-                grid.innerHTML = '';
+                grid.innerHTML = '<div class="col-span-full text-center text-xs font-bold text-slate-400 py-6">尚未捕獲任何漢字怪獸，快去「🎯 挑戰」試試看吧！</div>';
                 return;
             }
 
-            grid.innerHTML = arr.map(char => `
+            const sortedArr = [...arr].sort((a, b) => {
+                const sa = typeof charStrokeCountCache[a] === 'number' ? charStrokeCountCache[a] : 999;
+                const sb = typeof charStrokeCountCache[b] === 'number' ? charStrokeCountCache[b] : 999;
+                if (sa !== sb) return sa - sb;
+                return arr.indexOf(a) - arr.indexOf(b);
+            });
+
+            grid.innerHTML = sortedArr.map(char => `
                 <div onclick="previewVaultChar('${char}')" class="btn-3d bg-amber-50 p-1 rounded-xl border-2 border-amber-300 aspect-square flex items-center justify-center cursor-pointer hover:bg-amber-100">
                     <div class="vault-brush-font text-3xl sm:text-4xl text-slate-900 select-none">${char}</div>
                 </div>
             `).join('');
+
+            ensureCharStrokeCounts(arr).then(updated => {
+                if (updated && currentTab === 'vault') {
+                    renderVaultGrid();
+                }
+            });
         }
 
         function previewVaultChar(char) {
@@ -1000,7 +1120,7 @@
             const isChinese = /^[\u4e00-\u9fa5]$/.test(val);
 
             if (!val || !isChinese) {
-                updateFeedback('請輸入一個漢字。');
+                updateFeedback('請搜尋一隻漢字怪獸。');
             } else {
                 if (currentTab === 'practice') {
                     updateFeedback('請點擊「跟寫」或「示範」練習筆順喔!');
@@ -1026,15 +1146,6 @@
             clearUserCanvas();
             writer = null;
             updatePromptByInput();
-        }
-
-        function resizeCanvas() {
-            const container = document.getElementById('grid-container');
-            if (!container || !canvas) return;
-            const rect = container.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
-            clearUserCanvas();
         }
 
         function animateCharacter() {
