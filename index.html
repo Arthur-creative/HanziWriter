@@ -244,7 +244,7 @@
         <nav class="grid grid-cols-4 gap-1.5 sm:gap-2.5">
             <button onclick="switchTab('tab-practice')" id="nav-practice" 
                 class="tab-btn btn-3d py-3 px-1 rounded-xl font-black text-sm sm:text-base bg-child-blue text-white border border-blue-600 flex items-center justify-center gap-1">
-                <span>✏️</span> 練習
+                <span>✏️</span> 訓練
             </button>
             <button onclick="switchTab('tab-challenge')" id="nav-challenge" 
                 class="tab-btn btn-3d py-3 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1">
@@ -256,12 +256,12 @@
             </button>
             <button onclick="switchTab('tab-vault')" id="nav-vault" 
                 class="tab-btn btn-3d py-3 px-1 rounded-xl font-black text-sm sm:text-base bg-slate-100 text-slate-700 border border-slate-300 flex items-center justify-center gap-1">
-                <span>📖</span> 字庫
+                <span>📖</span> 收藏
             </button>
         </nav>
     </header>
 
-    <!-- 1 & 2. 筆順練習 / 筆順挑戰 主要區域 -->
+    <!-- 1 & 2. 筆順訓練 / 筆順挑戰 主要區域 -->
     <main id="main-learning-view" class="w-full bg-white p-1 sm:p-1 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col items-center justify-center mb-auto gap-3">
         
         <!-- 輸入欄與功能區 (垂直置中排版) -->
@@ -347,7 +347,7 @@
         <div id="comp-home-section" class="flex flex-col gap-4">
             <div class="bg-gradient-to-r from-orange-400 to-amber-500 p-3 rounded-2xl text-black text-center shadow-md">
                 <h2 class="text-lg font-black tracking-wide">⚔️ 選擇等級進行挑戰吧! ⚔️</h2>
-                <p class="text-sm mt-1 opacity-95">※登入Google帳號可保留最佳成績※</p>
+                <p class="text-sm mt-1 opacity-95">※登入Google帳號可保存最佳戰績※</p>
             </div>
 
             <!-- 等級選擇器 -->
@@ -360,7 +360,7 @@
             <!-- 三欄式排行榜面板 (初級 / 中級 / 高級) -->
             <div id="comp-leaderboard-panel" class="bg-slate-50 p-3 rounded-2xl border border-slate-200">
                 <h3 class="text-sm font-black text-slate-700 mb-3 flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-trophy text-amber-500"></i> 全站競賽英雄榜 (各等級前 10 名)
+                    <i class="fa-solid fa-trophy text-amber-500"></i> 全站競賽英雄榜 (前 10 名)
                 </h3>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
                     <!-- 初級榜 -->
@@ -436,7 +436,7 @@
         </div>
     </div>
 
-    <!-- 4. 我的成就字庫分頁 (隱藏狀態) -->
+    <!-- 4. 我的字庫收藏分頁 (隱藏狀態) -->
     <div id="tab-vault-view" class="hidden w-full bg-white p-3 sm:p-5 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col gap-3 mb-auto">
         <!-- 頂部成就計數與鼓勵橫幅 (參考競賽頁橘色漸層底色與第二行文字外觀) -->
         <div class="bg-gradient-to-r from-orange-400 to-amber-500 p-3 rounded-2xl text-black text-center shadow-md">
@@ -450,7 +450,7 @@
 
         <!-- 我的等級獨立置中顯示 (位於鼓勵橫幅下方、英雄榜上方) -->
         <div class="w-full flex justify-center">
-            <div class="bg-child-orange text-black px-5 py-1.5 rounded-2xl font-black text-base sm:text-lg shadow-md border border-amber-700 tracking-wide flex items-center gap-1.5">
+            <div class="bg-amber-100 text-black px-5 py-1.5 rounded-2xl font-black text-base sm:text-lg shadow-md border border-amber-700 tracking-wide flex items-center gap-1.5">
                 <span>我的等級:</span>
                 <span id="vault-badge">漢字小菜鳥 🐣</span>
             </div>
@@ -468,11 +468,10 @@
 
         <!-- 我的漢字怪獸字庫獨立標題與垂直捲軸區域 -->
         <div class="bg-amber-50/40 p-3 rounded-2xl border border-amber-200/80 flex flex-col gap-2">
-            <div class="flex items-center justify-between px-1">
-                <h3 class="text-sm sm:text-base font-black text-slate-800 flex items-center gap-1.5">
-                    <span>📖</span> 我的漢字怪獸字庫
+            <div class="flex items-center justify-center px-1">
+                <h3 class="text-sm sm:text-base font-black text-slate-800 flex items-center justify-center gap-1.5">
+                    <span>📖</span> 我的漢字怪獸寶庫
                 </h3>
-                <span class="text-[11px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">筆畫由少到多排列</span>
             </div>
             <!-- 已解鎖漢字網格 (垂直捲軸區域，字數多時可上下順暢滑動) -->
             <div id="vault-grid" class="grid grid-cols-5 sm:grid-cols-6 gap-2 max-h-72 overflow-y-auto p-1"></div>
@@ -481,7 +480,8 @@
 
     <!-- 頁尾 -->
     <footer class="mt-3 text-center text-xs text-slate-400 font-medium shrink-0">
-       🌟Created by LouieLucas Studio. © 2026 All rights reserved.🌟
+       🌟Created by LouieLucas Studio.🌟 
+          © 2026 All rights reserved.
     </footer>
 
     <!-- JavaScript 核心邏輯 -->
@@ -746,7 +746,7 @@
                     },
                     onComplete: function() {
                         if (currentTab === 'challenge') {
-                            updateFeedback('恭喜你，挑戰成功! 已存入字庫。', 'text-child-blue');
+                            updateFeedback(`恭喜!!  你已成功捕獲「${currentChar}」字怪獸，並加入收藏。`, 'text-child-blue');
                             saveToVault(currentChar);
                             handleQuizSuccessEffects();
                         }
@@ -1122,9 +1122,9 @@
                 updateFeedback('請搜尋一隻漢字怪獸。');
             } else {
                 if (currentTab === 'practice') {
-                    updateFeedback('請點擊「跟寫」或「示範」練習筆順喔!');
+                    updateFeedback('點擊「跟寫、示範」，練習筆順書寫喔!');
                 } else if (currentTab === 'challenge') {
-                    updateFeedback('請開始筆順挑戰吧!');
+                    updateFeedback(`開始挑戰「${val}」字怪獸吧!`);
                 }
             }
         }
