@@ -547,21 +547,7 @@
             return true;
         }
 
-        window.showAuthNotice = function(msg) {
-            const banner = document.getElementById('auth-notice-banner');
-            const textEl = document.getElementById('auth-notice-text');
-            if (banner && textEl) {
-                textEl.innerText = msg;
-                banner.classList.remove('hidden');
-            }
-        };
-
-        window.resetLocalUserVault = function() {
-            unlockedVault.clear();
-            if (currentTab === 'vault') renderVaultGrid();
-        };
-
-        // 從 Firestore 動態讀取 word_banks 雲端競賽題庫 (easy / medium / hard)
+        // 從 Firestore 動態讀取 word_banks 雲端競賽題庫 (easy / medium / hard)，同時支援純文字字串與陣列格式
         window.loadCloudWordBanks = async function() {
             if (!window.db || !window.doc || !window.getDoc) return;
             const levels = ['easy', 'medium', 'hard'];
@@ -569,8 +555,23 @@
                 try {
                     const bankRef = window.doc(window.db, 'word_banks', lvl);
                     const snap = await window.getDoc(bankRef);
-                    if (snap.exists() && Array.isArray(snap.data().words) && snap.data().words.length > 0) {
-                        WORD_BANKS[lvl] = snap.data().words.filter(w => typeof w === 'string' && w.trim().length > 0);
+                    if (snap.exists()) {
+                        const data = snap.data();
+                        let collectedText = '';
+
+                        // 收集文件內所有字串或陣列欄位中的文字 (不限欄位名稱)
+                        Object.values(data).forEach(val => {
+                            if (typeof val === 'string') {
+                                collectedText += val;
+                            } else if (Array.isArray(val)) {
+                                collectedText += val.join('');
+                            }
+                        });
+
+                        const matched = collectedText.match(/[\u4e00-\u9fa5]/g);
+                        if (matched && matched.length > 0) {
+                            WORD_BANKS[lvl] = Array.from(new Set(matched));
+                        }
                     }
                 } catch (e) {
                     console.warn(`讀取雲端題庫 (${lvl}) 失敗，使用備援題庫:`, e);
@@ -766,17 +767,23 @@
         }
 
         // 競賽專用邏輯
-        function startCompetition(level) {
+        async function startCompetition(level) {
             compLevel = level;
             compScore = 0;
             compMistakes = 0;
             compCompletedStrokes = 0;
             isCompeting = true;
-            compWordBank = [...WORD_BANKS[level]].sort(() => Math.random() - 0.5);
 
             updateCompScoreUI();
             document.getElementById('comp-home-section').classList.add('hidden');
             document.getElementById('comp-play-area').classList.remove('hidden');
+            updateCompFeedback('⏳ 正在載入最新雲端題庫...');
+
+            // 每次開始競賽前，即時向 Firebase 同步最新題庫
+            await window.loadCloudWordBanks();
+
+            if (!isCompeting) return;
+            compWordBank = [...WORD_BANKS[level]].sort(() => Math.random() - 0.5);
             nextCompetitionWord();
         }
 
