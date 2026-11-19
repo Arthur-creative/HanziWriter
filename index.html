@@ -18,11 +18,11 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, arrayUnion, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Config (專屬專案連線金鑰)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'hanzi-learning-e565b';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+        // Firebase Config (固定連線至您的專屬專案 hanzi-learning-e565b)
+        const appId = 'hanzi-learning-e565b';
+        const firebaseConfig = {
             apiKey: "AIzaSyArTnvG8A4VEvS7pYVADs5AjjdY9bgDP-w",
             authDomain: "hanzi-learning-e565b.firebaseapp.com",
             databaseURL: "https://hanzi-learning-e565b-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -42,6 +42,7 @@
         window.appId = appId;
         window.doc = doc;
         window.getDoc = getDoc;
+        window.getDocs = getDocs;
         window.setDoc = setDoc;
         window.updateDoc = updateDoc;
         window.arrayUnion = arrayUnion;
@@ -51,14 +52,14 @@
         // 初始化登入狀態
         window.initAuth = async function() {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else if (!auth.currentUser) {
+                if (!auth.currentUser) {
                     await signInAnonymously(auth);
                 }
             } catch(e) {
                 console.warn("Auth initialization fallback:", e);
                 if (window.loadCloudWordBanks) window.loadCloudWordBanks();
+                if (window.listenLeaderboard) window.listenLeaderboard();
+                if (window.listenVaultLeaderboard) window.listenVaultLeaderboard();
             }
         };
 
@@ -520,63 +521,113 @@
         const charStrokeCountCache = {};
         let vaultLeaderboardUnsub = null;
 
+        // 10 階漢字等級稱號對照表
         function getVaultLevelBadge(count) {
-            if (count >= 2000) return '漢字大宗師 👑';
-            if (count >= 1600) return '漢字小教授 🏛️';
-            if (count >= 1200) return '漢字小博士 🎓';
-            if (count >= 800) return '漢字小碩士 📜';
-            if (count >= 500) return '漢字小學士 📘';
-            if (count >= 300) return '漢字小達人 🌟';
-            if (count >= 150) return '漢字小班長 🎖️';
-            if (count >= 100) return '漢字小學生 🎒';
-            if (count >= 50) return '漢字小新手 🌱';
+            if (count >= 200) return '漢字至尊傳奇 👑';
+            if (count >= 150) return '文字大宗師 🐉';
+            if (count >= 100) return '書法大將軍 ⚔️';
+            if (count >= 75) return '博學小狀元 🎓';
+            if (count >= 50) return '筆順小達人 🔥';
+            if (count >= 35) return '文字探險家 🧭';
+            if (count >= 20) return '勤學小書生 📚';
+            if (count >= 10) return '識字小高手 ⭐';
+            if (count >= 5) return '漢字小萌新 🌱';
             return '漢字小菜鳥 🐣';
         }
 
+        // 自動載入並快取各漢字的筆畫數
         async function ensureCharStrokeCounts(chars) {
+            let updated = false;
             const missing = chars.filter(c => typeof charStrokeCountCache[c] !== 'number');
             if (missing.length === 0) return false;
             await Promise.all(missing.map(async (c) => {
                 try {
                     const data = await HanziWriter.loadCharacterData(c);
-                    charStrokeCountCache[c] = (data && Array.isArray(data.strokes)) ? data.strokes.length : 999;
+                    if (data && Array.isArray(data.strokes)) {
+                        charStrokeCountCache[c] = data.strokes.length;
+                        updated = true;
+                    }
                 } catch (e) {
                     charStrokeCountCache[c] = 999;
                 }
             }));
-            return true;
+            return updated;
         }
 
-        // 從 Firestore 動態讀取 word_banks 雲端競賽題庫 (easy / medium / hard)，同時支援純文字字串與陣列格式
-        window.loadCloudWordBanks = async function() {
-            if (!window.db || !window.doc || !window.getDoc) return;
-            const levels = ['easy', 'medium', 'hard'];
-            for (const lvl of levels) {
-                try {
-                    const bankRef = window.doc(window.db, 'word_banks', lvl);
-                    const snap = await window.getDoc(bankRef);
-                    if (snap.exists()) {
-                        const data = snap.data();
-                        let collectedText = '';
+        // 顯示登入或系統提示橫幅
+        window.showAuthNotice = function(msg) {
+            const banner = document.getElementById('auth-notice-banner');
+            const textEl = document.getElementById('auth-notice-text');
+            if (banner && textEl) {
+                textEl.innerText = msg;
+                banner.classList.remove('hidden');
+            }
+        };
 
-                        // 收集文件內所有字串或陣列欄位中的文字 (不限欄位名稱)
-                        Object.values(data).forEach(val => {
-                            if (typeof val === 'string') {
-                                collectedText += val;
-                            } else if (Array.isArray(val)) {
-                                collectedText += val.join('');
+        // 登出時重置本機字庫顯示
+        window.resetLocalUserVault = function() {
+            unlockedVault.clear();
+            if (currentTab === 'vault') renderVaultGrid();
+        };
+
+        // 從 Firestore 動態讀取 word_banks 雲端競賽題庫 (自動掃描整個集合與常見路徑，支援純文字字串與陣列格式)
+        window.loadCloudWordBanks = async function() {
+            if (!window.db || !window.collection || !window.getDocs) return { loaded: false, reason: '資料庫尚未初始化' };
+
+            const extractCharsFromObj = (obj) => {
+                let text = '';
+                const walk = (val) => {
+                    if (typeof val === 'string') {
+                        text += val;
+                    } else if (Array.isArray(val)) {
+                        val.forEach(walk);
+                    } else if (val && typeof val === 'object') {
+                        Object.values(val).forEach(walk);
+                    }
+                };
+                walk(obj);
+                const matched = text.match(/[\u4e00-\u9fa5]/g);
+                return matched ? Array.from(new Set(matched)) : [];
+            };
+
+            const mapDocIdToLevel = (id) => {
+                const lower = String(id || '').trim().toLowerCase();
+                if (lower.includes('easy') || lower.includes('初')) return 'easy';
+                if (lower.includes('med') || lower.includes('中')) return 'medium';
+                if (lower.includes('hard') || lower.includes('高')) return 'hard';
+                return null;
+            };
+
+            const candidateCollections = [
+                window.collection(window.db, 'word_banks'),
+                window.collection(window.db, 'artifacts', window.appId, 'public', 'data', 'word_banks')
+            ];
+
+            let anyUpdated = false;
+            let lastError = '';
+
+            for (const colRef of candidateCollections) {
+                try {
+                    const snap = await window.getDocs(colRef);
+                    if (!snap.empty) {
+                        snap.forEach(docSnap => {
+                            const lvl = mapDocIdToLevel(docSnap.id);
+                            if (lvl) {
+                                const chars = extractCharsFromObj(docSnap.data());
+                                if (chars.length > 0) {
+                                    WORD_BANKS[lvl] = chars;
+                                    anyUpdated = true;
+                                }
                             }
                         });
-
-                        const matched = collectedText.match(/[\u4e00-\u9fa5]/g);
-                        if (matched && matched.length > 0) {
-                            WORD_BANKS[lvl] = Array.from(new Set(matched));
-                        }
                     }
                 } catch (e) {
-                    console.warn(`讀取雲端題庫 (${lvl}) 失敗，使用備援題庫:`, e);
+                    lastError = e && e.message ? e.message : String(e);
+                    console.warn('讀取雲端題庫集合失敗:', e);
                 }
             }
+
+            return { loaded: anyUpdated, reason: lastError };
         };
 
         window.onload = function () {
@@ -777,12 +828,16 @@
             updateCompScoreUI();
             document.getElementById('comp-home-section').classList.add('hidden');
             document.getElementById('comp-play-area').classList.remove('hidden');
-            updateCompFeedback('⏳ 正在載入最新雲端題庫...');
+            updateCompFeedback('⏳ 正在從雲端同步最新題庫...');
 
             // 每次開始競賽前，即時向 Firebase 同步最新題庫
-            await window.loadCloudWordBanks();
+            const syncRes = await window.loadCloudWordBanks();
 
             if (!isCompeting) return;
+            if (!syncRes.loaded && syncRes.reason) {
+                console.warn('雲端題庫讀取異常:', syncRes.reason);
+                updateCompFeedback(`⚠️ 雲端讀取異常 (${syncRes.reason})，暫用預設題庫`);
+            }
             compWordBank = [...WORD_BANKS[level]].sort(() => Math.random() - 0.5);
             nextCompetitionWord();
         }
@@ -869,13 +924,53 @@
                         if (!isCompeting) return;
                         compScore++;
                         updateCompScoreUI();
-                        nextCompetitionWord();
+                        playCompConfettiAndNext();
                     }
                 });
                 compWriter.quiz();
             } catch (e) {
                 console.warn('競賽 HanziWriter 載入錯誤:', e);
             }
+        }
+
+        function playCompConfettiAndNext() {
+            const target = document.getElementById('comp-grid-container');
+            const charTarget = document.getElementById('comp-character-target');
+            if (target) {
+                const colors = ['#FFDE59', '#FF4aba', '#415acc', '#1bd2b2', '#FF914D'];
+                for (let i = 0; i < 24; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'confetti-particle';
+                    particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    particle.style.left = '50%';
+                    particle.style.top = '50%';
+                    particle.style.width = `${Math.random() * 8 + 6}px`;
+                    particle.style.height = `${Math.random() * 8 + 6}px`;
+                    const tx = (Math.random() - 0.5) * 260;
+                    const ty = (Math.random() - 0.5) * 260;
+                    const rot = Math.random() * 360;
+                    particle.style.setProperty('--tx', `${tx}px`);
+                    particle.style.setProperty('--ty', `${ty}px`);
+                    particle.style.setProperty('--rot', `${rot}deg`);
+                    target.appendChild(particle);
+                    setTimeout(() => particle.remove(), 1200);
+                }
+            }
+
+            setTimeout(() => {
+                if (!isCompeting) return;
+                if (charTarget) {
+                    charTarget.style.transition = 'opacity 0.25s ease';
+                    charTarget.style.opacity = '0';
+                }
+                setTimeout(() => {
+                    if (!isCompeting) return;
+                    nextCompetitionWord();
+                    if (charTarget) {
+                        charTarget.style.opacity = '1';
+                    }
+                }, 250);
+            }, 650);
         }
 
         function renderCompMistakeResult() {
