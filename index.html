@@ -865,6 +865,7 @@
                         if (currentTab === 'challenge') {
                             updateFeedback(`恭喜!!  你已成功捕獲「${currentChar}」字怪獸，並加入收藏。`, 'text-child-blue');
                             saveToVault(currentChar);
+                            speakCharacter(currentChar);
                             handleQuizSuccessEffects();
                         }
                     }
@@ -991,6 +992,7 @@
                         if (!isCompeting) return;
                         compScore++;
                         updateCompScoreUI();
+                        speakCharacter(compCurrentChar);
                         playCompConfettiAndNext();
                     }
                 });
@@ -1451,8 +1453,8 @@
             }
         }
 
-        function speakCharacter() {
-            const char = currentChar || document.getElementById('char-input').value.trim() || '永';
+        function speakCharacter(targetChar) {
+            const char = targetChar || currentChar || document.getElementById('char-input').value.trim() || '永';
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel(); // 停止先前發音
                 const utterance = new SpeechSynthesisUtterance(char);
