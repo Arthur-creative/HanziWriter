@@ -219,9 +219,9 @@
     <!-- 頂部用戶帳號與分頁導覽 -->
     <header class="w-full text-center mb-2 shrink-0">
         <div class="flex items-center justify-between bg-white px-3 sm:px-4 py-1.5 rounded-2xl shadow-md border border-slate-200 mb-2 gap-2">
-            <h1 class="text-xs sm:text-sm font-black text-child-black tracking-wide flex items-center gap-1.5 truncate">
-                兒童漢字筆順學習遊戲 
-            </h1>
+            <button onclick="openGameGuide()" class="btn-3d bg-blue-200 hover:brightness-105 text-black border border-blue-600 text-xs font-black px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm shrink-0">
+                <i class="fa-solid fa-circle-question text-black"></i> 遊戲說明
+            </button>
             <div id="user-info" class="flex items-center gap-1.5 shrink-0">
                 <span id="user-display" class="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full border border-slate-200 flex items-center gap-1">
                     👤 訪客模式
@@ -485,61 +485,114 @@
           © 2026 All rights reserved.
     </footer>
 
+    <!-- 遊戲說明彈跳視窗 (覆蓋於最上層) -->
+    <div id="game-guide-modal" onclick="if(event.target === this) closeGameGuide()" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl border-4 border-blue-300 p-5 sm:p-6 text-left relative animate-[fadeIn_0.15s_ease-out]">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
+                <h2 class="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-question text-child-blue"></i> 兒童漢字筆順學習遊戲說明
+                </h2>
+                <button onclick="closeGameGuide()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black flex items-center justify-center shrink-0">
+                    ✕
+                </button>
+            </div>
+
+            <div class="flex flex-col gap-2.5 text-xs sm:text-sm text-slate-700 leading-relaxed">
+                <div class="bg-gradient-to-r from-purple-50 to-purple-50 p-3 rounded-2xl border border-purple-200/80 shadow-2xs">
+                    <div class="font-black text-purple-800 mb-1 flex items-center gap-1.5">
+                        <span>🌟</span> 遊戲設計理念
+                    </div>
+                    <p class="text-slate-700">本遊戲專為幫助學童正確掌握漢字筆順而設計，我們將枯燥的學習轉化為趣味的「捕捉怪獸」闖關與競賽，期待孩子在享受遊戲樂趣的同時紮實地提升寫字力！</p>
+                    <p class="text-purple-700 font-bold mt-1.5">※登入Google帳號，可保存競賽成績與怪獸收藏※</p>
+                </div>
+
+                <div class="bg-blue-50/80 p-2.5 rounded-2xl border border-blue-200">
+                    <div class="font-black text-child-blue mb-0.5">✏️ 訓練模式</div>
+                    <p>輸入想學習的漢字，可點擊「跟寫」或「示範」觀看正確筆順，也能自由調整畫筆顏色與粗細在米字格上練習。</p>
+                </div>
+
+                <div class="bg-blue-50/80 p-2.5 rounded-2xl border border-blue-200">
+                    <div class="font-black text-child-blue mb-0.5">🎯 挑戰模式</div>
+                    <p>輸入想挑戰的漢字，用正確筆順寫出即可成功捕獲「漢字怪獸」，並自動加入你的收藏寶庫！</p>
+                </div>
+
+                <div class="bg-blue-50/80 p-2.5 rounded-2xl border border-blue-200">
+                    <div class="font-black text-child-blue mb-0.5">⚔️ 競賽模式</div>
+                    <p>選擇「初級、中級、高級」挑戰隨機題庫，每回合有 3 次失誤機會，挑戰最高積分並登上全站英雄榜！</p>
+                </div>
+
+                <div class="bg-blue-50/80 p-2.5 rounded-2xl border border-blue-200">
+                    <div class="font-black text-child-blue mb-0.5">📖 收藏寶庫</div>
+                    <p>登入Google帳號，可查看你已捕獲的「漢字怪獸」收藏與等級排行榜戰績！</p>
+                </div>
+            </div>
+
+            <div class="mt-4 text-center">
+                <button onclick="closeGameGuide()" class="btn-3d w-full bg-child-blue text-white font-black py-2.5 rounded-2xl border border-blue-700 text-sm sm:text-base">
+                    我知道了，開始遊戲！
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript 核心邏輯 -->
     <script>
+        // 學習與畫布全域狀態變數
+        let currentTab = 'practice';
+        let currentChar = '永';
         let writer = null;
-        let compWriter = null;
+        let strokeSpeed = 1;
+        let isPaused = false;
+        let isAnimating = false;
+
+        // 自由繪圖畫布變數
         let canvas = null;
         let ctx = null;
         let isDrawing = false;
         let brushColor = '#2f7fff';
         let brushSize = 12;
-        let currentChar = '永';
-        let compCurrentChar = '';
-        let currentTab = 'practice';
-        let strokeSpeed = 1;
-        let isPaused = false; // 追蹤筆順動畫暫停狀態
-        let isAnimating = false; // 精準追蹤筆順動畫播放狀態
 
-        // 競賽模式 state
-        let isCompeting = false;
+        // 競賽模式全域狀態變數
         let compLevel = 'easy';
         let compScore = 0;
         let compMistakes = 0;
         let compCompletedStrokes = 0;
+        let isCompeting = false;
+        let compCurrentChar = '';
         let compWordBank = [];
-        // 預設斷網備援題庫（啟動後會自動從 Firebase word_banks 同步覆寫）
-        let WORD_BANKS = {
-            easy: ['人', '大', '小', '木', '口', '日', '月', '山', '水', '火'],
-            medium: ['永', '福', '好', '學', '習', '春', '喜', '飛', '花', '愛'],
-            hard: ['龍', '龜', '鳳', '聽', '讀', '禮', '藝', '繁', '靈', '慶']
+        let compWriter = null;
+
+        // 預設備援三級字庫 (若雲端尚未設定時自動使用)
+        const WORD_BANKS = {
+            easy: ['人', '大', '木', '口', '日', '月', '山', '水', '火', '土'],
+            medium: ['春', '夏', '秋', '冬', '風', '雨', '雲', '電', '花', '草'],
+            hard: ['龍', '鳳', '龜', '麟', '鶴', '鷹', '舞', '飛', '躍', '騰']
         };
 
-        // 本機與雲端成就字庫 Array
-        let unlockedVault = new Set();
-        // 快取每個漢字的筆畫數以利排序
+        // 成就收藏字庫與排行榜快取
+        const unlockedVault = new Set();
         const charStrokeCountCache = {};
         let vaultLeaderboardUnsub = null;
 
-        // 10 階漢字等級稱號對照表
+        // 依據捕獲漢字怪獸數量回傳 10 階稱號徽章
         function getVaultLevelBadge(count) {
-            if (count >= 200) return '漢字至尊傳奇 👑';
-            if (count >= 150) return '文字大宗師 🐉';
-            if (count >= 100) return '書法大將軍 ⚔️';
-            if (count >= 75) return '博學小狀元 🎓';
-            if (count >= 50) return '筆順小達人 🔥';
-            if (count >= 35) return '文字探險家 🧭';
-            if (count >= 20) return '勤學小書生 📚';
-            if (count >= 10) return '識字小高手 ⭐';
-            if (count >= 5) return '漢字小萌新 🌱';
+            if (count >= 200) return '漢字大宗師 👑';
+            if (count >= 150) return '漢字大將軍 ⚔️';
+            if (count >= 100) return '漢字大博士 🎓';
+            if (count >= 70) return '漢字大英雄 🦸';
+            if (count >= 50) return '漢字大達人 🌟';
+            if (count >= 30) return '漢字小高手 🔥';
+            if (count >= 20) return '漢字小能手 🚀';
+            if (count >= 10) return '漢字小達人 ✨';
+            if (count >= 5) return '漢字小新星 🌱';
             return '漢字小菜鳥 🐣';
         }
 
-        // 自動載入並快取各漢字的筆畫數
+        // 查詢並快取各漢字筆畫數以利收藏寶庫由少至多排序
         async function ensureCharStrokeCounts(chars) {
-            let updated = false;
             const missing = chars.filter(c => typeof charStrokeCountCache[c] !== 'number');
             if (missing.length === 0) return false;
+            let updated = false;
             await Promise.all(missing.map(async (c) => {
                 try {
                     const data = await HanziWriter.loadCharacterData(c);
@@ -563,6 +616,17 @@
                 banner.classList.remove('hidden');
             }
         };
+
+        // 開啟與關閉遊戲說明彈跳視窗
+        function openGameGuide() {
+            const modal = document.getElementById('game-guide-modal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeGameGuide() {
+            const modal = document.getElementById('game-guide-modal');
+            if (modal) modal.classList.add('hidden');
+        }
 
         // 登出時重置本機字庫顯示
         window.resetLocalUserVault = function() {
@@ -786,7 +850,8 @@
                     outlineColor: '#CBD5E1',
                     showOutline: true,
                     showCharacter: currentTab === 'practice',
-                    highlightColor: '#FF66C4',
+                    highlightColor: '#3B82F6',
+                    highlightCompleteColor: '#3B82F6',
                     onLoadCharDataError: function(err) {
                         console.warn('HanziWriter 載入失敗:', err);
                         updateFeedback(`⚠️ 抱歉，暫無「${char}」的筆順資料`, 'text-child-orange');
@@ -905,6 +970,8 @@
                     outlineColor: '#CBD5E1',
                     drawingColor: '#333333',
                     drawingWidth: 4,
+                    highlightColor: '#3B82F6',
+                    highlightCompleteColor: '#3B82F6',
                     showOutline: true,
                     showCharacter: false,
                     onCorrectStroke: function(strokeData) {
@@ -1404,7 +1471,7 @@
         }
 
         function handleQuizSuccessEffects() {
-            // 慶祝效果 (粒子動畫)
+            // 慶祝效果 (粒子動畫，與競賽分頁成功效果一致)
             const target = document.getElementById('grid-container');
             if (!target) return;
             const colors = ['#FFDE59', '#FF4aba', '#415acc', '#1bd2b2', '#FF914D'];
@@ -1425,7 +1492,6 @@
                 target.appendChild(particle);
                 setTimeout(() => particle.remove(), 1200);
             }
-            speakCharacter();
         }
 
         window.addEventListener('resize', () => {
