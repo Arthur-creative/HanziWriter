@@ -200,6 +200,80 @@
             line-height: 1.1;
         }
 
+        /* 1~5星與謎之怪獸專屬微金屬質感字卡外框：右上打光立體邊框 + 絲滑順暢底色漸層 */
+        .monster-card-5 {
+            background:
+                radial-gradient(circle at 92% 8%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 251, 235, 0.35) 38%, transparent 72%),
+                linear-gradient(225deg, #FFFBEB 0%, #FEF3C7 28%, #FDE68A 62%, #F59E0B 100%);
+            border-style: solid;
+            border-width: 2.5px;
+            border-top-color: #FFFBEB;
+            border-right-color: #FEF3C7;
+            border-bottom-color: #92400E;
+            border-left-color: #B45309;
+            box-shadow: -2px 4px 10px rgba(180, 83, 9, 0.35), inset -1.5px 1.5px 2px rgba(255, 255, 255, 0.95);
+        }
+        .monster-card-4 {
+            background:
+                radial-gradient(circle at 92% 8%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 228, 230, 0.35) 38%, transparent 72%),
+                linear-gradient(225deg, #FFF1F2 0%, #FFE4E6 30%, #FECDD3 64%, #FB7185 100%);
+            border-style: solid;
+            border-width: 2.5px;
+            border-top-color: #FFF1F2;
+            border-right-color: #FFE4E6;
+            border-bottom-color: #9F1239;
+            border-left-color: #BE123C;
+            box-shadow: -2px 4px 9px rgba(190, 18, 60, 0.28), inset -1.5px 1.5px 2px rgba(255, 255, 255, 0.92);
+        }
+        .monster-card-3 {
+            background:
+                radial-gradient(circle at 92% 8%, rgba(255, 255, 255, 0.9) 0%, rgba(224, 242, 254, 0.35) 38%, transparent 72%),
+                linear-gradient(225deg, #F0F9FF 0%, #E0F2FE 30%, #BAE6FD 65%, #38BDF8 100%);
+            border-style: solid;
+            border-width: 2.5px;
+            border-top-color: #F0F9FF;
+            border-right-color: #E0F2FE;
+            border-bottom-color: #075985;
+            border-left-color: #0369A1;
+            box-shadow: -2px 3px 8px rgba(3, 105, 161, 0.25), inset -1.5px 1.5px 2px rgba(255, 255, 255, 0.92);
+        }
+        .monster-card-2 {
+            background:
+                radial-gradient(circle at 92% 8%, rgba(255, 255, 255, 0.9) 0%, rgba(220, 252, 231, 0.35) 38%, transparent 72%),
+                linear-gradient(225deg, #F0FDF4 0%, #DCFCE7 30%, #BBF7D0 65%, #4ADE80 100%);
+            border-style: solid;
+            border-width: 2px;
+            border-top-color: #F0FDF4;
+            border-right-color: #DCFCE7;
+            border-bottom-color: #166534;
+            border-left-color: #15803D;
+            box-shadow: -2px 3px 7px rgba(21, 128, 61, 0.22), inset -1.5px 1.5px 2px rgba(255, 255, 255, 0.9);
+        }
+        .monster-card-1 {
+            background:
+                radial-gradient(circle at 92% 8%, rgba(255, 255, 255, 0.95) 0%, rgba(241, 245, 249, 0.4) 38%, transparent 72%),
+                linear-gradient(225deg, #FFFFFF 0%, #F8FAFC 32%, #E2E8F0 68%, #CBD5E1 100%);
+            border-style: solid;
+            border-width: 2px;
+            border-top-color: #FFFFFF;
+            border-right-color: #F8FAFC;
+            border-bottom-color: #64748B;
+            border-left-color: #94A3B8;
+            box-shadow: -2px 3px 6px rgba(100, 116, 139, 0.22), inset -1.5px 1.5px 2px rgba(255, 255, 255, 0.95);
+        }
+        .monster-card-mystery {
+            background:
+                radial-gradient(circle at 92% 8%, rgba(199, 210, 254, 0.55) 0%, rgba(129, 140, 248, 0.2) 38%, transparent 72%),
+                linear-gradient(225deg, #4338CA 0%, #3730A3 35%, #2E1065 70%, #1E1B4B 100%);
+            border-style: solid;
+            border-width: 2px;
+            border-top-color: #C7D2FE;
+            border-right-color: #A5B4FC;
+            border-bottom-color: #1E1B4B;
+            border-left-color: #312E81;
+            box-shadow: -2px 3px 9px rgba(49, 46, 129, 0.35), inset -1px 1px 2px rgba(224, 231, 255, 0.45);
+        }
+
         .confetti-particle {
             position: absolute;
             pointer-events: none;
@@ -450,10 +524,14 @@
         </div>
 
         <!-- 我的等級獨立置中顯示 (位於鼓勵橫幅下方、英雄榜上方) -->
-        <div class="w-full flex justify-center">
-            <div class="bg-amber-100 text-black px-5 py-1.5 rounded-2xl font-black text-base sm:text-lg shadow-md border border-amber-700 tracking-wide flex items-center gap-1.5">
+        <div class="w-full flex flex-wrap items-center justify-center gap-2">
+            <div class="bg-amber-100 text-black px-4 py-1.5 rounded-2xl font-black text-sm sm:text-base shadow-md border border-amber-700 tracking-wide flex items-center gap-1.5">
                 <span>我的等級:</span>
                 <span id="vault-badge">漢字小菜鳥 🐣</span>
+            </div>
+            <div class="bg-yellow-300/90 text-slate-900 px-4 py-1.5 rounded-2xl font-black text-sm sm:text-base shadow-md border border-amber-700 tracking-wide flex items-center gap-1.5">
+                <span>累計星數:</span>
+                <span id="vault-total-stars" class="text-rose-600">⭐ 0</span>
             </div>
         </div>
 
@@ -462,20 +540,20 @@
             <h3 class="text-sm font-black text-slate-800 mb-2 flex items-center justify-center gap-1.5">
                 <span>👑</span> 全站等級英雄榜（前 10 名）
             </h3>
-            <div id="vault-leaderboard-list" class="flex flex-col gap-1.5 max-h-48 overflow-y-auto text-xs">
+            <div id="vault-leaderboard-list" class="flex flex-col gap-1.5 max-h-52 overflow-y-auto text-xs">
                 <div class="text-center text-slate-400 py-2">載入英雄榜中...</div>
             </div>
         </div>
 
         <!-- 我的漢字怪獸字庫獨立標題與垂直捲軸區域 -->
-        <div class="bg-amber-50/40 p-3 rounded-2xl border border-amber-200/80 flex flex-col gap-2">
+        <div class="bg-amber-50/40 p-3 rounded-2xl border border-amber-200/80 flex flex-col gap-2.5">
             <div class="flex items-center justify-center px-1">
                 <h3 class="text-sm sm:text-base font-black text-slate-800 flex items-center justify-center gap-1.5">
                     <span>📖</span> 我的漢字怪獸寶庫
                 </h3>
             </div>
-            <!-- 已解鎖漢字網格 (垂直捲軸區域，字數多時可上下順暢滑動) -->
-            <div id="vault-grid" class="grid grid-cols-5 sm:grid-cols-6 gap-2 max-h-72 overflow-y-auto p-1"></div>
+            <!-- 依 5★ 到 1★ 與謎之怪獸分層顯示的垂直捲軸區域 -->
+            <div id="vault-grid" class="flex flex-col gap-3 max-h-[26rem] overflow-y-auto p-1"></div>
         </div>
     </div>
 
@@ -588,7 +666,29 @@
             return '漢字小菜鳥 🐣';
         }
 
-        // 查詢並快取各漢字筆畫數以利收藏寶庫由少至多排序
+        // 依據筆畫數回傳星等 (1~5星，查無筆畫資料為 0 代表謎之怪獸)
+        function getCharStarRating(strokes) {
+            if (typeof strokes !== 'number' || strokes <= 0 || strokes >= 999) return 0;
+            if (strokes >= 18) return 5;
+            if (strokes >= 14) return 4;
+            if (strokes >= 10) return 3;
+            if (strokes >= 6) return 2;
+            return 1;
+        }
+
+        // 計算字庫的總星數與各星等張數統計
+        function computeVaultStarStats(chars) {
+            const starCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0, 0: 0 };
+            let totalStars = 0;
+            chars.forEach(c => {
+                const stars = getCharStarRating(charStrokeCountCache[c]);
+                starCounts[stars] = (starCounts[stars] || 0) + 1;
+                totalStars += stars;
+            });
+            return { totalStars, starCounts };
+        }
+
+        // 查詢並快取各漢字筆畫數以利星等分級與排序
         async function ensureCharStrokeCounts(chars) {
             const missing = chars.filter(c => typeof charStrokeCountCache[c] !== 'number');
             if (missing.length === 0) return false;
@@ -596,12 +696,15 @@
             await Promise.all(missing.map(async (c) => {
                 try {
                     const data = await HanziWriter.loadCharacterData(c);
-                    if (data && Array.isArray(data.strokes)) {
+                    if (data && Array.isArray(data.strokes) && data.strokes.length > 0) {
                         charStrokeCountCache[c] = data.strokes.length;
-                        updated = true;
+                    } else {
+                        charStrokeCountCache[c] = -1;
                     }
+                    updated = true;
                 } catch (e) {
-                    charStrokeCountCache[c] = 999;
+                    charStrokeCountCache[c] = -1;
+                    updated = true;
                 }
             }));
             return updated;
@@ -1096,6 +1199,7 @@
         // 成就字庫儲存與同步
         async function saveToVault(char) {
             unlockedVault.add(char);
+            await ensureCharStrokeCounts([char]);
             if (window.currentUser && window.db) {
                 try {
                     const userRef = window.doc(window.db, 'artifacts', window.appId, 'users', window.currentUser.uid, 'vault');
@@ -1112,14 +1216,19 @@
         async function syncVaultLeaderboardRecord() {
             if (!window.currentUser || !window.db) return;
             const isGoogleUser = !window.currentUser.isAnonymous;
-            const count = unlockedVault.size;
+            const arr = Array.from(unlockedVault);
+            const count = arr.length;
             if (!isGoogleUser && count === 0) return;
+            await ensureCharStrokeCounts(arr);
+            const { totalStars, starCounts } = computeVaultStarStats(arr);
             try {
                 const rankRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'vault_leaderboard', window.currentUser.uid);
                 await window.setDoc(rankRef, {
                     uid: window.currentUser.uid,
                     name: window.currentUser.displayName || window.currentUser.email || '訪客學員',
                     count: count,
+                    stars: totalStars,
+                    starCounts: starCounts,
                     badge: getVaultLevelBadge(count),
                     updatedAt: Date.now()
                 }, { merge: true });
@@ -1137,7 +1246,11 @@
                     snapshot.forEach(docSnap => list.push(docSnap.data()));
                     const top10 = list
                         .filter(item => (item.count || 0) > 0)
-                        .sort((a, b) => (b.count || 0) - (a.count || 0))
+                        .sort((a, b) => {
+                            const starDiff = (b.stars || 0) - (a.stars || 0);
+                            if (starDiff !== 0) return starDiff;
+                            return (b.count || 0) - (a.count || 0);
+                        })
                         .slice(0, 10);
                     renderVaultLeaderboard(top10);
                 }, (err) => console.warn('Vault leaderboard snapshot error:', err));
@@ -1153,14 +1266,26 @@
             }
             container.innerHTML = data.map((item, idx) => {
                 const count = item.count || 0;
+                const totalStars = item.stars || 0;
+                const sc = item.starCounts || {};
                 const badgeText = getVaultLevelBadge(count);
-                const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+                const rankLabel = `#${idx + 1}`;
+                const starBreakdown = [5, 4, 3, 2, 1]
+                    .filter(s => (sc[s] || 0) > 0)
+                    .map(s => `${s}★ ${sc[s]}張`)
+                    .join(' ');
+                const breakdownDisplay = starBreakdown || `${count}張`;
+
                 return `
-                    <div class="flex items-center justify-between gap-2 px-2.5 py-1.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
-                        <span class="font-black text-amber-600 w-7 shrink-0 text-center">${rankIcon}</span>
-                        <span class="font-bold text-slate-800 flex-1 truncate">${item.name || '學員'}</span>
+                    <div class="flex flex-wrap items-center gap-x-1.5 gap-y-1 px-2.5 py-1.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs text-slate-800">
+                        <span class="font-black text-amber-600 shrink-0">${rankLabel}</span>
+                        <span class="font-bold text-slate-900 truncate max-w-[90px] sm:max-w-[130px]">${item.name || '學員'}</span>
+                        <span class="text-slate-300 font-bold">｜</span>
                         <span class="font-black text-amber-900 bg-amber-100/90 px-2 py-0.5 rounded-full shrink-0">${badgeText}</span>
-                        <span class="font-black text-rose-600 shrink-0 w-14 text-right">${count} 隻</span>
+                        <span class="text-slate-300 font-bold">｜</span>
+                        <span class="font-black text-rose-600 shrink-0">⭐ ${totalStars}</span>
+                        <span class="text-slate-300 font-bold">｜</span>
+                        <span class="font-bold text-slate-600 text-[11px] sm:text-xs">${breakdownDisplay}</span>
                     </div>
                 `;
             }).join('');
@@ -1175,6 +1300,7 @@
                         snap.data().unlocked.forEach(c => unlockedVault.add(c));
                     }
                     if (unlockedVault.size > 0) {
+                        await ensureCharStrokeCounts(Array.from(unlockedVault));
                         await syncVaultLeaderboardRecord();
                     }
                     if (currentTab === 'vault') renderVaultGrid();
@@ -1244,29 +1370,113 @@
             const badge = document.getElementById('vault-badge');
             badge.innerText = getVaultLevelBadge(arr.length);
 
+            const { totalStars } = computeVaultStarStats(arr);
+            const totalStarsEl = document.getElementById('vault-total-stars');
+            if (totalStarsEl) totalStarsEl.innerText = `⭐ ${totalStars}`;
+
+            // 若還有字尚未取得筆畫數，先非同步查詢完成後自動重繪與同步雲端星數
+            const hasPending = arr.some(c => typeof charStrokeCountCache[c] !== 'number');
+            if (hasPending) {
+                ensureCharStrokeCounts(arr).then(async (updated) => {
+                    if (updated) {
+                        await syncVaultLeaderboardRecord();
+                        if (currentTab === 'vault') renderVaultGrid();
+                    }
+                });
+            }
+
             if (arr.length === 0) {
-                grid.innerHTML = '<div class="col-span-full text-center text-xs font-bold text-slate-400 py-6">尚未捕獲漢字怪獸，快去「挑戰」試試看吧！</div>';
+                grid.innerHTML = '<div class="text-center text-xs font-bold text-slate-400 py-6">尚未捕獲漢字怪獸，快去「挑戰」試試看吧！</div>';
                 return;
             }
 
-            const sortedArr = [...arr].sort((a, b) => {
-                const sa = typeof charStrokeCountCache[a] === 'number' ? charStrokeCountCache[a] : 999;
-                const sb = typeof charStrokeCountCache[b] === 'number' ? charStrokeCountCache[b] : 999;
-                if (sa !== sb) return sa - sb;
-                return arr.indexOf(a) - arr.indexOf(b);
-            });
+            // 記錄加入先後順序索引，供筆畫數相同時排序使用
+            const orderMap = new Map();
+            arr.forEach((c, idx) => orderMap.set(c, idx));
 
-            grid.innerHTML = sortedArr.map(char => `
-                <div onclick="previewVaultChar('${char}')" class="btn-3d bg-amber-50 p-1 rounded-xl border-2 border-amber-300 aspect-square flex items-center justify-center cursor-pointer hover:bg-amber-100">
-                    <div class="vault-brush-font text-3xl sm:text-4xl text-slate-900 select-none">${char}</div>
-                </div>
-            `).join('');
-
-            ensureCharStrokeCounts(arr).then(updated => {
-                if (updated && currentTab === 'vault') {
-                    renderVaultGrid();
+            // 定義 6 個展示區塊：5★ 到 1★，最後為謎之怪獸 (0)
+            const sections = [
+                {
+                    star: 5,
+                    titleHtml: '👑 傳說級怪獸 <span class="text-amber-500 drop-shadow-[0_1px_1px_rgba(120,53,15,0.45)] tracking-wider">★★★★★</span>',
+                    headerClass: 'bg-gradient-to-r from-amber-100 via-yellow-50 to-amber-200/80 text-slate-900 border-amber-400 shadow-xs',
+                    cardClass: 'monster-card-5',
+                    textClass: 'text-slate-950',
+                    emptyText: '尚未捕獲傳說級怪獸，挑戰 18 畫以上漢字吧！'
+                },
+                {
+                    star: 4,
+                    titleHtml: '💎 史詩級怪獸 <span class="text-rose-600 drop-shadow-[0_1px_1px_rgba(159,18,57,0.3)] tracking-wider">★★★★</span>',
+                    headerClass: 'bg-gradient-to-r from-rose-100 via-red-50 to-rose-200/80 text-slate-900 border-rose-400 shadow-xs',
+                    cardClass: 'monster-card-4',
+                    textClass: 'text-rose-950',
+                    emptyText: '尚未捕獲史詩級怪獸'
+                },
+                {
+                    star: 3,
+                    titleHtml: '🔷 稀有級怪獸 <span class="text-sky-600 drop-shadow-[0_1px_1px_rgba(3,105,161,0.3)] tracking-wider">★★★</span>',
+                    headerClass: 'bg-gradient-to-r from-sky-100 via-blue-50 to-sky-200/80 text-slate-900 border-sky-400 shadow-xs',
+                    cardClass: 'monster-card-3',
+                    textClass: 'text-sky-950',
+                    emptyText: '尚未捕獲稀有級怪獸'
+                },
+                {
+                    star: 2,
+                    titleHtml: '🌿 進階級怪獸 <span class="text-emerald-600 drop-shadow-[0_1px_1px_rgba(6,95,70,0.3)] tracking-wider">★★</span>',
+                    headerClass: 'bg-gradient-to-r from-emerald-100 via-green-50 to-emerald-200/80 text-slate-900 border-emerald-400 shadow-xs',
+                    cardClass: 'monster-card-2',
+                    textClass: 'text-emerald-950',
+                    emptyText: '尚未捕獲進階級怪獸'
+                },
+                {
+                    star: 1,
+                    titleHtml: '🌱 基礎級怪獸 <span class="text-slate-500 drop-shadow-[0_1px_1px_rgba(71,85,105,0.25)] tracking-wider">★</span>',
+                    headerClass: 'bg-white text-slate-900 border-slate-300 shadow-xs',
+                    cardClass: 'monster-card-1',
+                    textClass: 'text-slate-900',
+                    emptyText: '尚未捕獲基礎級怪獸'
+                },
+                {
+                    star: 0,
+                    titleHtml: '🌌 謎之怪獸 <span class="text-indigo-600 tracking-wider">✦</span>',
+                    headerClass: 'bg-gradient-to-r from-indigo-100 via-purple-50 to-indigo-200/80 text-slate-900 border-indigo-300 shadow-xs',
+                    cardClass: 'monster-card-mystery',
+                    textClass: 'text-indigo-50',
+                    emptyText: '尚未發現謎之怪獸'
                 }
-            });
+            ];
+
+            grid.innerHTML = sections.map(sec => {
+                // 篩選出屬於該星等區塊的漢字，並依「筆畫由大到小，筆畫相同依加入順序」排序
+                const items = arr
+                    .filter(c => getCharStarRating(charStrokeCountCache[c]) === sec.star)
+                    .sort((a, b) => {
+                        const sa = typeof charStrokeCountCache[a] === 'number' && charStrokeCountCache[a] > 0 ? charStrokeCountCache[a] : -1;
+                        const sb = typeof charStrokeCountCache[b] === 'number' && charStrokeCountCache[b] > 0 ? charStrokeCountCache[b] : -1;
+                        if (sa !== sb) return sb - sa;
+                        return orderMap.get(a) - orderMap.get(b);
+                    });
+
+                const cardsHtml = items.length > 0
+                    ? `<div class="grid grid-cols-5 sm:grid-cols-6 gap-2 pt-1">
+                        ${items.map(char => `
+                            <div onclick="previewVaultChar('${char}')" class="btn-3d ${sec.cardClass} relative p-1 rounded-xl aspect-square flex items-center justify-center cursor-pointer hover:brightness-105 transition-transform">
+                                <div class="vault-brush-font text-3xl sm:text-4xl ${sec.textClass} select-none">${char}</div>
+                            </div>
+                        `).join('')}
+                       </div>`
+                    : `<div class="text-center text-[11px] font-bold text-slate-400 py-2">${sec.emptyText}</div>`;
+
+                return `
+                    <div class="bg-white/90 rounded-2xl border border-slate-200/90 p-2.5 shadow-2xs flex flex-col gap-2">
+                        <div class="flex items-center justify-between px-3 py-2.5 min-h-[44px] rounded-xl border text-sm sm:text-base font-black ${sec.headerClass}">
+                            <span class="flex items-center gap-1.5 flex-wrap">${sec.titleHtml}</span>
+                            <span class="bg-slate-900/10 text-slate-900 px-2.5 py-0.5 rounded-full text-xs sm:text-sm shrink-0">${items.length} 隻</span>
+                        </div>
+                        ${cardsHtml}
+                    </div>
+                `;
+            }).join('');
         }
 
         function previewVaultChar(char) {
