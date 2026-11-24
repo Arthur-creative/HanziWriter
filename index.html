@@ -420,7 +420,7 @@
     <div id="tab-competition-view" class="hidden w-full bg-white p-3 sm:p-5 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col gap-4 mb-auto">
         <!-- 競賽首頁區塊 (包含橫幅、等級選擇、三欄英雄榜) -->
         <div id="comp-home-section" class="flex flex-col gap-4">
-            <div class="bg-gradient-to-r from-orange-400 to-amber-500 p-3 rounded-2xl text-black text-center shadow-md">
+            <div class="bg-gradient-to-r from-orange-400 to-amber-500 p-3 min-h-[76px] rounded-2xl text-black text-center shadow-md flex flex-col items-center justify-center">
                 <h2 class="text-lg font-black tracking-wide">⚔️ 選擇等級進行挑戰吧! ⚔️</h2>
                 <p class="text-sm mt-1 opacity-95">※登入Google帳號可保存最佳戰績※</p>
             </div>
@@ -513,25 +513,28 @@
 
     <!-- 4. 我的字庫收藏分頁 (隱藏狀態) -->
     <div id="tab-vault-view" class="hidden w-full bg-white p-3 sm:p-5 rounded-3xl shadow-xl border-3 border-slate-100 flex flex-col gap-3 mb-auto">
-        <!-- 頂部成就計數與鼓勵橫幅 (參考競賽頁橘色漸層底色與第二行文字外觀) -->
-        <div class="bg-gradient-to-r from-orange-400 to-amber-500 p-3 rounded-2xl text-black text-center shadow-md">
+        <!-- 頂部成就計數橫幅 (與競賽頁鼓勵橫幅同高，取消第二行文字避免切換跳動) -->
+        <div class="bg-gradient-to-r from-orange-400 to-amber-500 p-3 min-h-[76px] rounded-2xl text-black text-center shadow-md flex items-center justify-center">
             <div class="flex items-center justify-center gap-1.5 flex-wrap">
                 <span class="text-base sm:text-lg font-black text-black">你已捕獲:</span>
                 <span id="vault-count" class="text-2xl sm:text-3xl font-black text-rose-600 bg-white/95 px-3 py-0.5 rounded-xl border-2 border-white shadow-[0_3px_8px_rgba(180,83,9,0.35)] drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]">0</span>
                 <span class="text-base sm:text-lg font-black text-black">隻漢字怪獸</span>
             </div>
-            <p class="text-sm mt-1 opacity-95">※點擊「挑戰」一起捕獲漢字怪獸吧※</p>
         </div>
 
-        <!-- 我的等級獨立置中顯示 (位於鼓勵橫幅下方、英雄榜上方) -->
+        <!-- 我的等級、累計星數與右側新增資訊框 (統一琥珀底色與深琥珀框線外觀) -->
         <div class="w-full flex flex-wrap items-center justify-center gap-2">
             <div class="bg-amber-100 text-black px-4 py-1.5 rounded-2xl font-black text-sm sm:text-base shadow-md border border-amber-700 tracking-wide flex items-center gap-1.5">
                 <span>我的等級:</span>
                 <span id="vault-badge">漢字小菜鳥 🐣</span>
             </div>
-            <div class="bg-yellow-300/90 text-slate-900 px-4 py-1.5 rounded-2xl font-black text-sm sm:text-base shadow-md border border-amber-700 tracking-wide flex items-center gap-1.5">
+            <div class="bg-amber-100 text-black px-4 py-1.5 rounded-2xl font-black text-sm sm:text-base shadow-md border border-amber-700 tracking-wide flex items-center gap-1.5">
                 <span>累計星數:</span>
                 <span id="vault-total-stars" class="text-rose-600">⭐ 0</span>
+            </div>
+            <div class="bg-amber-100 text-black px-4 py-1.5 rounded-2xl font-black text-sm sm:text-base shadow-md border border-amber-700 tracking-wide flex items-center gap-1.5">
+                <span>傳說神獸:</span>
+                <span id="vault-legend-count" class="text-amber-800">👑 0 隻</span>
             </div>
         </div>
 
@@ -622,6 +625,7 @@
         let strokeSpeed = 1;
         let isPaused = false;
         let isAnimating = false;
+        let challengeMistakes = 0;
 
         // 自由繪圖畫布變數
         let canvas = null;
@@ -928,6 +932,7 @@
             }
 
             currentChar = char;
+            challengeMistakes = 0;
             clearUserCanvas();
             const container = document.getElementById('character-target');
             container.innerHTML = '';
@@ -936,32 +941,55 @@
             updatePromptByInput();
         }
 
+        function triggerChallengeRedFlash() {
+            const grid = document.getElementById('grid-container');
+            if (!grid) return;
+            grid.classList.remove('grid-blink-once');
+            void grid.offsetWidth;
+            grid.classList.add('grid-blink-once');
+            setTimeout(() => {
+                grid.classList.remove('grid-blink-once');
+            }, 650);
+        }
+
         function initWriter(char) {
             if (!char) return;
             const container = document.getElementById('character-target');
+            const grid = document.getElementById('grid-container');
+            if (grid) grid.classList.remove('grid-blink-once');
             container.innerHTML = '';
-            const gridWidth = document.getElementById('grid-container').clientWidth;
+            const gridWidth = grid.clientWidth;
 
             try {
                 writer = HanziWriter.create('character-target', char, {
                     width: gridWidth,
                     height: gridWidth,
-                    padding: 20,
+                    padding: 15,
                     strokeAnimationSpeed: strokeSpeed,
                     delayBetweenStrokes: 200,
                     strokeColor: '#2C3E50',
                     outlineColor: '#CBD5E1',
+                    drawingColor: '#333333',
+                    drawingWidth: 4,
                     showOutline: true,
                     showCharacter: currentTab === 'practice',
                     highlightColor: '#3B82F6',
                     highlightCompleteColor: '#3B82F6',
+                    showHintAfterMisses: 1,
                     onLoadCharDataError: function(err) {
                         console.warn('HanziWriter 載入失敗:', err);
                         updateFeedback(`⚠️ 抱歉，暫無「${char}」的筆順資料`, 'text-child-orange');
                     },
                     onMistake: function() {
                         if (currentTab === 'challenge') {
-                            updateFeedback(' 哎呀! 筆順錯囉，請再試試!', 'text-child-pink');
+                            challengeMistakes++;
+                            triggerChallengeRedFlash();
+                            if (challengeMistakes >= 3) {
+                                if (writer) writer.cancelQuiz();
+                                updateFeedback('哎呀，挑戰失敗! 請再加強訓練唷!', 'text-child-pink');
+                            } else {
+                                updateFeedback(`總共3次錯誤機會 ｜ 累計錯誤 ${challengeMistakes} / 3 次`, 'text-child-pink');
+                            }
                         }
                     },
                     onComplete: function() {
@@ -1370,9 +1398,12 @@
             const badge = document.getElementById('vault-badge');
             badge.innerText = getVaultLevelBadge(arr.length);
 
-            const { totalStars } = computeVaultStarStats(arr);
+            const { totalStars, starCounts } = computeVaultStarStats(arr);
             const totalStarsEl = document.getElementById('vault-total-stars');
             if (totalStarsEl) totalStarsEl.innerText = `⭐ ${totalStars}`;
+
+            const legendCountEl = document.getElementById('vault-legend-count');
+            if (legendCountEl) legendCountEl.innerText = `👑 ${starCounts[5] || 0} 隻`;
 
             // 若還有字尚未取得筆畫數，先非同步查詢完成後自動重繪與同步雲端星數
             const hasPending = arr.some(c => typeof charStrokeCountCache[c] !== 'number');
@@ -1505,7 +1536,7 @@
                 if (currentTab === 'practice') {
                     updateFeedback('點擊「跟寫、示範」，練習筆順書寫喔!');
                 } else if (currentTab === 'challenge') {
-                    updateFeedback(`開始挑戰「${val}」字怪獸吧!`);
+                    updateFeedback(`總共3次錯誤機會 ｜ 累計錯誤 ${challengeMistakes} / 3 次`);
                 }
             }
         }
@@ -1521,8 +1552,11 @@
 
         function clearAllContent() {
             currentChar = '';
+            challengeMistakes = 0;
             document.getElementById('char-input').value = '';
             document.getElementById('character-target').innerHTML = '';
+            const grid = document.getElementById('grid-container');
+            if (grid) grid.classList.remove('grid-blink-once');
             clearUserCanvas();
             writer = null;
             updatePromptByInput();
