@@ -362,6 +362,17 @@
             </p>
         </div>
 
+        <!-- 漢字怪獸屬性與戰力偵測標籤 (訓練 / 挑戰共用) -->
+        <div id="learning-monster-stats" class="w-full max-w-[360px] flex items-center justify-center">
+            <div class="bg-slate-100/90 border border-slate-300 text-slate-700 px-3 py-1 rounded-full text-xs sm:text-sm font-black flex items-center gap-2 shadow-2xs">
+                <span>?部 ?畫</span>
+                <span class="text-slate-300">|</span>
+                <span>無屬性</span>
+                <span class="text-slate-300">|</span>
+                <span class="text-rose-600">⚔️ --</span>
+            </div>
+        </div>
+
         <!-- 米字格畫布 (垂直置中) -->
         <div class="relative w-full max-w-[320px] sm:max-w-[360px] aspect-square flex items-center justify-center my-1">
             <div id="grid-container" class="mi-zi-ge w-full h-full relative overflow-hidden flex items-center justify-center">
@@ -490,6 +501,17 @@
                 <p id="comp-feedback-text" class="text-sm sm:text-base font-black text-slate-900 tracking-wide text-center w-full">
                     累計錯誤 0 / 3 次 ｜ 準備中...
                 </p>
+            </div>
+
+            <!-- 競賽怪獸屬性與戰力偵測標籤 -->
+            <div id="comp-monster-stats" class="w-full flex items-center justify-center">
+                <div class="bg-slate-100/90 border border-slate-300 text-slate-700 px-3 py-1 rounded-full text-xs sm:text-sm font-black flex items-center gap-2 shadow-2xs">
+                    <span>?部 ?畫</span>
+                    <span class="text-slate-300">|</span>
+                    <span>無系</span>
+                    <span class="text-slate-300">|</span>
+                    <span class="text-rose-600">⚔️ --</span>
+                </div>
             </div>
 
             <!-- 米字格畫布 -->
@@ -651,7 +673,652 @@
         // 成就收藏字庫與排行榜快取
         const unlockedVault = new Set();
         const charStrokeCountCache = {};
+        const charRadicalCache = {};
+        const moeCharDataCache = {};
+        let mmaRadicalMapPromise = null;
+        const mmaRadicalCache = {};
         let vaultLeaderboardUnsub = null;
+
+        // =========================================================================
+        // 1. 內建五行部首屬系與攻擊力加成規則表 (可直接在此微調部首字串或倍率)
+        // =========================================================================
+        const MONSTER_ATTRIBUTE_RULES = {
+            fire: {
+                name: '火',
+                icon: '🔥',
+                multiplier: 1.5,
+                badgeClass: 'bg-rose-100 text-rose-800 border-rose-300',
+                radicals: '火灬日光心忄赤馬'
+            },
+            water: {
+                name: '水',
+                icon: '💧',
+                multiplier: 1.4,
+                badgeClass: 'bg-sky-100 text-sky-800 border-sky-300',
+                radicals: '水氵冫雨魚舟川泉'
+            },
+            wood: {
+                name: '木',
+                icon: '🌿',
+                multiplier: 1.2,
+                badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+                radicals: '木艸艹竹禾米林森瓜麻麥豆'
+            },
+            metal: {
+                name: '金',
+                icon: '⚔️',
+                multiplier: 1.6,
+                badgeClass: 'bg-amber-100 text-amber-900 border-amber-300',
+                radicals: '金钅刀刂戈矛矢斤車玉王貝'
+            },
+            earth: {
+                name: '土',
+                icon: '🪨',
+                multiplier: 1.1,
+                badgeClass: 'bg-stone-200 text-stone-800 border-stone-400',
+                radicals: '土山石田阜阝厂穴瓦皿'
+            },
+            defaultAttr: {
+                name: '無',
+                icon: '✨',
+                multiplier: 1.0,
+                badgeClass: 'bg-slate-100 text-slate-700 border-slate-300',
+                radicals: ''
+            }
+        };
+
+        // 偏旁變形歸一化對照表（確保偏旁與標準康熙部首一致）
+        const RADICAL_NORMALIZE_MAP = {
+            '氵': '水', '氺': '水',
+            '灬': '火',
+            '忄': '心', '⺗': '心',
+            '扌': '手', '龵': '手',
+            '艹': '艸', '䒑': '艸',
+            '訁': '言', '讠': '言',
+            '钅': '金',
+            '糹': '糸', '纟': '糸',
+            '⻌': '辵', '辶': '辵',
+            '阝': '阜',
+            '王': '玉',
+            '月': '肉',
+            '犭': '犬',
+            '礻': '示',
+            '衤': '衣',
+            '飠': '食', '饣': '食',
+            '刂': '刀',
+            '彳': '行',
+            '牜': '牛',
+            '⺮': '竹',
+            '罒': '网',
+            '⺼': '肉'
+        };
+
+        // =========================================================================
+        // 2. 台灣教育部標準「214 部首 ➔ 筆畫分段精簡對照表」
+        // 格式：部首: [部首本身筆畫數, "0畫字|1畫字|2畫字|3畫字..."]
+        // 總筆畫數 = 部首筆畫數 + 分段索引值
+        // =========================================================================
+        const TW_MOE_RADICAL_TABLE = {
+            "一": [1, "一|丁七|丈三上下|不與丏丐丑|且丕世丘丙|丞丟並|"],
+            "丨": [1, "丨|丩|丫中|丰串|丳|"],
+            "丶": [1, "丶|丸|丹主|丼|"],
+            "丿": [1, "丿|乃|久么之|乍乎乏|乖|乘"],
+            "乙": [1, "乙|九|乞也|乳|乾|亂"],
+            "亅": [1, "亅|了|予|事"],
+            "二": [2, "二|于亏|雲互五井|況些亞|"],
+            "亠": [2, "亠|亡|亢交亥亦|亨享京|亮亭|"],
+            "人": [2, "人|什仁仃仄仆仇今介仍|仔仕他仗付仙代令以儀|仰仲件任份仿企伊伍伎伏伐休眾|伯估伴伶伸伺似伽佃但位低住佐佑體何余佛作你|佳使侃來例侍供依侮侯侵便係促俄俊俗俘保信|修俯俱俸倍倒候倚借倡倦倫值假偉偏做停健側偵偶偷|備傑傘傢催傭傲傳債傷傾僅像僑僕偽僧價億儉儒儘優償儲"],
+            "儿": [2, "儿|兀允元|兄充兆兇先光|克免兒|兔|黨兜|"],
+            "入": [2, "入|內|全兩|"],
+            "八": [2, "八|公六兮|共兵|其具典|兼|"],
+            "冂": [2, "冂|冊|再|冒|冕"],
+            "冖": [2, "冖|冗|冠|冢冤冥|"],
+            "冫": [2, "冫|冬冰|沖決|冷冶|准凋凌凍|凜凝"],
+            "几": [2, "几|凡|憑|凰凱|凳"],
+            "凵": [2, "凵|凶|凸凹出|函"],
+            "刀": [2, "刀|刃|分切刈|刊刑划列|初刪判別利|刮到制刷券刺刻|則削前剔剖剛剝剩剪副割創劃劇劈劉劍劑"],
+            "力": [2, "力|功加|劣助努劫|勁勃勇勉|勒動務勝勞勢勤勵勸"],
+            "勹": [2, "勹|勺|勾勿|包匆|匍|"],
+            "匕": [2, "匕|化|北|匙"],
+            "匚": [2, "匚|匝|匠匡|匣|匪|匯匱"],
+            "匸": [2, "匸|匹|醫|匿區"],
+            "十": [2, "十|千|午升半|卉|卒卓協|南|博"],
+            "卜": [2, "卜|卞|占卡|卦"],
+            "卩": [2, "卩|卯印危|即卻卵|卷卸|卿"],
+            "厂": [2, "厂|厄|厚原|厭厲|"],
+            "厶": [2, "厶|去|參"],
+            "又": [2, "又|叉及友雙反|叔取受|叛|叢"],
+            "口": [3, "口|古句另叨叩只叫召叭叮可台叱史右司吃各合吉吊同名字后吏吐向嚇|君吝吞吟吠否吧含聽吭吮呈吳吵吶吸吹吻吼吾呀呂呆|周味呵呸呻呼命咀咄咆和咎詠咐咒|哀品哄哇哈哉員哥哦哨哭哲哺哼唆唇唉唐|售唯唱唾商問啟啞啡啤啥啦啪喊喜喝喧喪吃單喚喻喬|嗅嗎嗓嗚嗜嗟嗣嗤嘆嘉嘔嘗嘛嘴嘶嘹嘻嘿器噴噸嚇嚴囉"],
+            "囗": [3, "囗|囚四|回因團|囤困固|國圍園圓圖"],
+            "土": [3, "土|在|圭地|址均坊坍坎壞坐|坑坡坤坦坪|垂型城域培基堂堅堆|堡堤堪報場堵塊塌塑塔塗塞填塵境墓增墨墮壁壇壓壘壞"],
+            "士": [3, "士|壬|壯|壽"],
+            "夂": [3, "夂|處|"],
+            "夊": [3, "夊|夏|"],
+            "夕": [3, "夕|外|多夜|夠夢夥"],
+            "大": [3, "大|天太夫央|失頭夷誇夾|奇奈奉奏契奔獎套|奧奪奮"],
+            "女": [3, "女|奴奶|奸好如妃妄|妝婦媽妥妨妮妹妻妾姆姊始姐姑姓委|姚姜姦姨姪威姿娃娘娜娟娛婚婆婉娶婦婪媒媚媛媽嫁嫂嫌嫩|嬰"],
+            "子": [3, "子|孔孕|字存孫|孝孟季孤|孩|學"],
+            "宀": [3, "宀|寧它|宅宇守安|宋完宏|宗官宙定宛宜|客宣室宮宰害宴宵家容|宿寂寄密富寒寓察寡寢實審寫寬寶寵"],
+            "寸": [3, "寸|寺|封|射將專尊尋對導"],
+            "小": [3, "小|少|尖|尚"],
+            "尢": [3, "尢|尤|就"],
+            "尸": [3, "尸|尺|尼盡尾尿局|屁層居屆屋屍屏屑展屬屠屢"],
+            "屮": [3, "屮|屯|"],
+            "山": [3, "山|屹|岐崗|岩岳岸|峰島峽峻崇崎崖崩嶺嶽"],
+            "巛": [3, "巛|川州|巡巢"],
+            "工": [3, "工|左巧巨|巫差"],
+            "己": [3, "己|已巳巴|巷"],
+            "巾": [3, "巾|市布|帆希|帕帖帛帝帥師席帳帶常帽幅幕幣幫"],
+            "干": [3, "干|平年|并幸幹"],
+            "幺": [3, "幺|幻幼|幽幾"],
+            "广": [3, "广|庇床序|底店府度座庫庭康庸廉廊廟廢廣廳"],
+            "廴": [3, "廴|延廷建"],
+            "廾": [3, "廾|廿|弁弄|弊"],
+            "弋": [3, "弋|式|"],
+            "弓": [3, "弓|弔引|弘弛弟|弦弧弱張強彈彌彎"],
+            "彐": [3, "彐|歸|當錄彗彝"],
+            "彡": [3, "彡|形彥|彩彬彭彰影"],
+            "彳": [3, "彳|役|彼往征待律後徐徑徒得從復微徵德徹"],
+            "心": [4, "心|必|忍志忘忙|忠快念忽態怎怒怕怖思怠急性怨怪|恆恐恕恢恥恨恩恭息恰悅悉悔悟悠患|悲悶情惑惜惠惡惰惱想惹愁愈愉意愚愛感慈態慌慎慕慘慢慣慧慮慰慶慾憂憎憐憑憲憶懂應懷懸戀"],
+            "戈": [4, "戈|戊戌|戒我|或戰戚截戲戴"],
+            "戶": [4, "戶|房所扁扇"],
+            "手": [4, "手|才扎|打托扛|扣扭扮扯扶批扼找技抄把|抑抓投抖抗折拋抱抵抹押抽拂拆拉拌拍拐拒拓拔拖拘拙招拜括拳拼拾拿持指按挑|挖挨挪振挺挽挾捉捏捐捕捧捨捲捷掃授掉掌排掛採探接控推掩措描提插揚換握揮援損搖搜搞搬搭搶摘摩摸撐撒撕撞播撫撰撲擁擇擊操擔據擠擦擬擴擺攀"],
+            "支": [4, "支|"],
+            "攴": [4, "攴|收攸改攻放政故效敏救敗敘教敝敢散敦敬整敵數"],
+            "文": [4, "文|斑"],
+            "斗": [4, "斗|料斜"],
+            "斤": [4, "斤|斥斧斬斷新"],
+            "方": [4, "方|於施旁旅旋族旗"],
+            "无": [4, "无|既"],
+            "日": [4, "日|旦舊旨早旬旭|旱旺昂昆昌明昏易昔星映春昨昭是時晉晏晚晝晨普景晴晶智暑暖暗暫暮暴曆曉"],
+            "曰": [4, "曰|曲更書曹曼曾替最會"],
+            "月": [4, "月|有朋服朗望朝期"],
+            "木": [4, "木|未末本札朱朴朵|朽杆杈杉李材村杖杜束條來|楊杭杯杰東杳松板極構析林枚果枝枯架柏某染柔查柱柳柴校核根格栽桂桃框案桌桐桑桶梁梅條梨梯械梵棄棉棋棒棚森棱棵植物檢椒椅概榜榮構槍樂樓標樞樣樸樹橋機橫檔檢欄權"],
+            "欠": [4, "欠|次欣欲欺欽款歇歌歐歡"],
+            "止": [4, "止|正此步武歧歪歲歷歸"],
+            "歹": [4, "歹|死殆殊殘殖"],
+            "殳": [4, "殳|段殷殺殿毀毅"],
+            "毋": [4, "毋|母每毒"],
+            "比": [4, "比|畢"],
+            "毛": [4, "毛|毫毯"],
+            "氏": [4, "氏|民氓"],
+            "气": [4, "气|氛氣氧"],
+            "水": [4, "水|永汁求|氾汀汗汙汝江池湯|汲決汽汾沁沂沃沈沉沒沖沙沛|河油治沼沾沿況泉泊法泛泡波泣泥注泰泳洋洗洛洞津洪洲活洽派流淺|浩浪浮浴海浸消涉涌涕濤液涵涼淑淚淡淨深混清淹添淼渴游渺渾湊湖湘湧湯源準溝溪溫測港遊滅滋滑滴滾滿漁漂漆漏演漠漢漫漲漸漿潔潛潮澤澳激濃濟濤濫濱濕濟灣"],
+            "火": [4, "火|滅灰|災灶灼|炒炊炎炙|炮炯炳炸點為烈烘烤|烹烽焉焊無焦焰然煉煌煎煙照煩煤煥照煮熊熱燃燈燒燙營爆爐爛"],
+            "爪": [4, "爪|爬爭爵"],
+            "父": [4, "父|爸爹爺"],
+            "爻": [4, "爻|爽爾"],
+            "爿": [4, "爿|牆"],
+            "片": [4, "片|版牌"],
+            "牙": [4, "牙|"],
+            "牛": [4, "牛|牢牧物牲特牽犀犧"],
+            "犬": [4, "犬|犯狀狂狐狗狠狡獨狹狼猛猜貓獻猶猴獎獸"],
+            "玄": [5, "玄|率"],
+            "玉": [5, "玉|王|玖玩玫玲玻珍珠班現球理琴環瑞瑰璃瓊"],
+            "瓜": [5, "瓜|瓢瓣"],
+            "瓦": [5, "瓦|瓶瓷"],
+            "甘": [5, "甘|甚甜"],
+            "生": [5, "生|產甥"],
+            "用": [5, "用|甫甬寧"],
+            "田": [5, "田|由甲申電男甸界畏留畜略畢異畫當疆"],
+            "疋": [5, "疋|疏疑"],
+            "疒": [5, "疒|疲疾病症痕痛痴瘋療癌"],
+            "癶": [5, "癶|登發"],
+            "白": [5, "白|百皂的皆皇"],
+            "皮": [5, "皮|皺"],
+            "皿": [5, "皿|盆盈益盒盛盜盟盡監盤盧"],
+            "目": [5, "目|盲直相盼盾省眉看真眠眼眾睛睡督睦瞄睜瞧"],
+            "矛": [5, "矛|矜"],
+            "矢": [5, "矢|知矩短矮矯"],
+            "石": [5, "石|砂砍研破硬碎碗碟碧碩碰確碼磁磨磯礦"],
+            "示": [5, "示|社祀祈祖祝神祥票祭禁禍福禮"],
+            "禸": [5, "禸|禹禽"],
+            "禾": [5, "禾|禿秀私秋科秒租秤秦移稅程稍種稱稿穀積穩穫"],
+            "穴": [5, "穴|究空穿突窗窩窮"],
+            "立": [5, "立|站章竟童端競"],
+            "竹": [6, "竹|竿笑笛符笨第筆等筋答策算管箭箱節範篇築簡簽籃籌籍"],
+            "米": [6, "米|粉粒粗粘精糊糕糖糧"],
+            "糸": [6, "糸|系糾紀約紅納紐純紙級紛素索紫累細紳紹終組結絕絡給統絲經綠維網緊緒線練習編緩緯練繁總績織繞繪繼續"],
+            "缶": [6, "缶|缸缺罐"],
+            "网": [6, "网|罕羅罰罵罷罪置署"],
+            "羊": [6, "羊|美羔群義"],
+            "羽": [6, "羽|翁翅習翔翠翻耀"],
+            "老": [6, "老|考者"],
+            "而": [6, "而|耍耐"],
+            "耒": [6, "耒|耕耗"],
+            "耳": [6, "耳|耶聊聖聘聞聯聰聲職聽"],
+            "聿": [6, "聿|肅肆"],
+            "肉": [6, "肉|肌肝肚育背胎胖胞胡胸能脆脈脊脫腐腔腦腰腳腸腹腿膚膠臉臂"],
+            "臣": [6, "臣|臥臨"],
+            "自": [6, "自|臭"],
+            "至": [6, "至|致臺"],
+            "臼": [6, "臼|與興舉舊"],
+            "舌": [6, "舌|舍舒館"],
+            "舛": [6, "舛|舞"],
+            "舟": [6, "舟|航般船艦"],
+            "艮": [6, "艮|良艱"],
+            "色": [6, "色|豔"],
+            "艸": [6, "艸|艾芋芒芝芬花芳芽若苦英茂范茄茅茶草荒荷莉莊莎莫菜華萌萬落葉著葛葡董葬蒸蒼蓄蓋蓮蔬蔡蔣蕭薄薪藍藏藝藤藥蘇蘋蘭"],
+            "虍": [6, "虍|虎虐處虛號虧"],
+            "虫": [6, "虫|虹蚊蛋蛙蜂蛾蜜蝴蝶融螞螢螺蟲蟹"],
+            "血": [6, "血|眾"],
+            "行": [6, "行|衍術街衛衝衡"],
+            "衣": [6, "衣|表袋袖被裁裂裝裕補複褲襯"],
+            "襾": [6, "襾|西要覆"],
+            "見": [7, "見|規視親覺覽觀"],
+            "角": [7, "角|解觸"],
+            "言": [7, "言|訂計訊討訓記訪設許訴診註證評詞詢試詩話該詳認語誤說誰課調談請論諸諾謀講謝謹識警議護讀變讓讚"],
+            "谷": [7, "谷|豁"],
+            "豆": [7, "豆|豈豐"],
+            "豕": [7, "豕|象豪豬"],
+            "豸": [7, "豸|豹貌貓"],
+            "貝": [7, "貝|貞負財貢貧貨販貪貫責貯貴買費貼賀資賈賊賓賞賜賠賢賣質賺賽贈贊贏"],
+            "赤": [7, "赤|赦赫"],
+            "走": [7, "走|赴起趁超越趕趙趣趨"],
+            "足": [7, "足|距跟跡跨路跳踏踢踩躍"],
+            "身": [7, "身|躲躺"],
+            "車": [7, "車|軌軍軒軟較載輕輔輛輝輩輪輯輸轉"],
+            "辛": [7, "辛|辜辭辣辦辨"],
+            "辰": [7, "辰|辱農"],
+            "辵": [7, "辵|迎近返還這進遠違連遲追退送逃逆透逐途通逛速造逢連週進逸逼遇遊運過道達違遙遜遠適遭遲遷選遺避還邁"],
+            "邑": [7, "邑|那邦邪郵郎部郭都鄉"],
+            "酉": [7, "酉|配酒酷酸醉醒醫"],
+            "釆": [7, "釆|採釋"],
+            "里": [7, "里|重野量"],
+            "金": [8, "金|針釣鈴銀銅銘銳銷鋒鋼錄錢錦錯鍋鍵鍾鎮鏡鐘鐵鑑"],
+            "長": [8, "長|"],
+            "門": [8, "門|閃閉開閏閒間閣閱關"],
+            "阜": [8, "阜|防阻阿附降限院陣除陪陰陳陸陽隆隊階際障隨隱"],
+            "隶": [8, "隶|隸"],
+            "隹": [8, "隹|隻雀雄雅集雇雌雕雖雙雜離難"],
+            "雨": [8, "雨|雪雲零雷電需震霜霧露霸靈"],
+            "青": [8, "青|靖靜"],
+            "非": [8, "非|靠"],
+            "面": [9, "面|"],
+            "革": [9, "革|鞋鞏鞭"],
+            "韋": [9, "韋|韓"],
+            "韭": [9, "韭|"],
+            "音": [9, "音|韻響"],
+            "頁": [9, "頁|頂項順須預頑頓頗領頭頻題額顏願類顧顯"],
+            "風": [9, "風|飄"],
+            "飛": [9, "飛|"],
+            "食": [9, "食|飢飯飲飽飾餅養餐餘館"],
+            "首": [9, "首|"],
+            "香": [9, "香|馨"],
+            "馬": [10, "馬|馮馳駕駐駛騎騙騷驅驗驚"],
+            "骨": [10, "骨|體"],
+            "高": [10, "高|"],
+            "髟": [10, "髟|髮鬆"],
+            "鬥": [10, "鬥|鬧"],
+            "鬯": [10, "鬯|鬱"],
+            "鬲": [10, "鬲|"],
+            "鬼": [10, "鬼|魂魄魔"],
+            "魚": [11, "魚|魯鮮鯨"],
+            "鳥": [11, "鳥|鳳鳴鴨鴻鵝鷹"],
+            "鹵": [11, "鹵|鹹鹽"],
+            "鹿": [11, "鹿|麗麟"],
+            "麥": [11, "麥|麵"],
+            "麻": [11, "麻|麼"],
+            "黃": [12, "黃|"],
+            "黍": [12, "黍|黎"],
+            "黑": [12, "黑|默點黨"],
+            "黹": [12, "黹|"],
+            "黽": [13, "黽|"],
+            "鼎": [13, "鼎|"],
+            "鼓": [13, "鼓|"],
+            "鼠": [13, "鼠|"],
+            "鼻": [14, "鼻|"],
+            "齊": [14, "齊|齋"],
+            "齒": [15, "齒|齡"],
+            "龍": [16, "龍|"],
+            "龜": [16, "龜|"],
+            "龠": [17, "龠|"]
+        };
+
+        // 展開後的台灣教育部常用字快查雜湊表：MOE_DICT_MAP["河"] = { radical: "水", strokes: 8 }
+        const MOE_DICT_MAP = {};
+        (function buildMoeDictMap() {
+            for (const [rad, info] of Object.entries(TW_MOE_RADICAL_TABLE)) {
+                const baseStrokes = info[0];
+                const segments = info[1].split('|');
+                segments.forEach((charsStr, extraStrokes) => {
+                    for (const ch of charsStr) {
+                        if (!MOE_DICT_MAP[ch]) {
+                            MOE_DICT_MAP[ch] = {
+                                radical: rad,
+                                strokes: baseStrokes + extraStrokes
+                            };
+                        }
+                    }
+                });
+            }
+        })();
+
+        // 將部首正規化為標準康熙部首字元
+        function normalizeRadical(rawRad) {
+            if (!rawRad) return '無';
+            const ch = String(rawRad).trim().charAt(0);
+            return RADICAL_NORMALIZE_MAP[ch] || ch || '無';
+        }
+
+        // 生僻字備援：載入 Make Me a Hanzi 同源字典 (與 HanziWriter 字庫 100% 同步)
+        async function loadMmaRadicalFallback(char) {
+            if (mmaRadicalCache[char]) return mmaRadicalCache[char];
+            if (!mmaRadicalMapPromise) {
+                mmaRadicalMapPromise = fetch('https://cdn.jsdelivr.net/gh/skishore/makemeahanzi@master/dictionary.txt')
+                    .then(res => res.ok ? res.text() : '')
+                    .then(text => {
+                        if (!text) return;
+                        const lines = text.split('\n');
+                        for (const line of lines) {
+                            if (!line) continue;
+                            try {
+                                const obj = JSON.parse(line);
+                                if (obj && obj.character && obj.radical) {
+                                    mmaRadicalCache[obj.character] = normalizeRadical(obj.radical);
+                                }
+                            } catch (e) {}
+                        }
+                    })
+                    .catch(() => {});
+            }
+            await mmaRadicalMapPromise;
+            return mmaRadicalCache[char] || (TW_MOE_RADICAL_TABLE[char] ? char : '無');
+        }
+
+        // =========================================================================
+        // 3. 台灣教育部標準筆順向量轉換器 (zh-stroke-data -> HanziWriter 格式)
+        // =========================================================================
+        function convertMoeStrokeDataToHanziWriter(moeData) {
+            if (!moeData || !Array.isArray(moeData) || moeData.length === 0) return null;
+            const strokes = [];
+            const medians = [];
+
+            // 台灣教育部 zh-stroke-data 畫布座標為 2048x2048 (Y 軸向下)，
+            // HanziWriter 座標為 1024x1024 (Y 軸向上，底部約 -124，頂部約 900)
+            const mapX = (x) => Math.round((x / 2048) * 1024);
+            const mapY = (y) => Math.round(900 - (y / 2048) * 1024);
+
+            for (const strokeObj of moeData) {
+                if (!Array.isArray(strokeObj.outline) || !Array.isArray(strokeObj.track) || strokeObj.track.length === 0) {
+                    continue;
+                }
+
+                // 轉換外框 SVG Path (M / L / Q / C / Z)
+                let d = '';
+                for (const cmd of strokeObj.outline) {
+                    const type = cmd.type;
+                    if (type === 'M' || type === 'L') {
+                        d += `${type} ${mapX(cmd.x)} ${mapY(cmd.y)} `;
+                    } else if (type === 'Q') {
+                        d += `Q ${mapX(cmd.begin.x)} ${mapY(cmd.begin.y)} ${mapX(cmd.end.x)} ${mapY(cmd.end.y)} `;
+                    } else if (type === 'C') {
+                        d += `C ${mapX(cmd.begin.x)} ${mapY(cmd.begin.y)} ${mapX(cmd.mid.x)} ${mapY(cmd.mid.y)} ${mapX(cmd.end.x)} ${mapY(cmd.end.y)} `;
+                    } else if (type === 'Z') {
+                        d += 'Z ';
+                    }
+                }
+                if (!d.trim()) continue;
+                strokes.push(d.trim());
+
+                // 轉換筆畫中軸軌跡點 (medians)
+                const trackPoints = strokeObj.track.map(pt => [mapX(pt.x), mapY(pt.y)]);
+                if (trackPoints.length === 1) {
+                    trackPoints.push([trackPoints[0][0] + 1, trackPoints[0][1]]);
+                }
+                medians.push(trackPoints);
+            }
+
+            if (strokes.length === 0) return null;
+            return { strokes, medians };
+        }
+
+        // 自訂 HanziWriter 字形載入器：優先載入台灣教育部標準筆順，生僻字無縫退回原字庫
+        function twMoeCharDataLoader(char, onLoad, onError) {
+            if (moeCharDataCache[char]) {
+                onLoad(moeCharDataCache[char]);
+                return;
+            }
+            const hexCode = char.codePointAt(0).toString(16).toLowerCase();
+            const moeUrl = `https://cdn.jsdelivr.net/gh/c9s/zh-stroke-data@master/utf8/${hexCode}.json`;
+
+            fetch(moeUrl)
+                .then(res => {
+                    if (!res.ok) throw new Error('MOE stroke not found');
+                    return res.json();
+                })
+                .then(rawMoe => {
+                    const converted = convertMoeStrokeDataToHanziWriter(rawMoe);
+                    if (converted) {
+                        moeCharDataCache[char] = converted;
+                        charStrokeCountCache[char] = converted.strokes.length;
+                        onLoad(converted);
+                    } else {
+                        throw new Error('MOE stroke convert failed');
+                    }
+                })
+                .catch(() => {
+                    // 退回 HanziWriter 預設字庫
+                    fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${encodeURIComponent(char)}.json`)
+                        .then(res => {
+                            if (!res.ok) throw new Error('Fallback not found');
+                            return res.json();
+                        })
+                        .then(data => {
+                            if (data && Array.isArray(data.strokes)) {
+                                moeCharDataCache[char] = data;
+                                if (!MOE_DICT_MAP[char]) {
+                                    charStrokeCountCache[char] = data.strokes.length;
+                                }
+                            }
+                            onLoad(data);
+                        })
+                        .catch(err => {
+                            if (onError) onError(err);
+                        });
+                });
+        }
+
+        // 0 延遲優先查詢內建台灣教育部常用字表，生僻字自動從同源字庫補齊
+        async function fetchCharMetadata(char) {
+            if (!char) return { radical: '無', strokes: -1 };
+
+            // 1. 優先命中內建台灣教育部標準字典 (0 延遲)
+            if (MOE_DICT_MAP[char]) {
+                charRadicalCache[char] = MOE_DICT_MAP[char].radical;
+                charStrokeCountCache[char] = MOE_DICT_MAP[char].strokes;
+                return { radical: charRadicalCache[char], strokes: charStrokeCountCache[char] };
+            }
+
+            // 2. 若已快取過則直接回傳
+            if (typeof charRadicalCache[char] === 'string' && typeof charStrokeCountCache[char] === 'number' && charStrokeCountCache[char] > 0) {
+                return { radical: charRadicalCache[char], strokes: charStrokeCountCache[char] };
+            }
+
+            // 3. 生僻字備援：從 HanziWriter 取得筆畫數 + Make Me a Hanzi 同源字典取得部首
+            try {
+                const hwData = await HanziWriter.loadCharacterData(char, { charDataLoader: twMoeCharDataLoader });
+                if (hwData && Array.isArray(hwData.strokes) && hwData.strokes.length > 0) {
+                    charStrokeCountCache[char] = hwData.strokes.length;
+                }
+            } catch (e) {}
+
+            const fallbackRad = await loadMmaRadicalFallback(char);
+            charRadicalCache[char] = fallbackRad || '無';
+            if (typeof charStrokeCountCache[char] !== 'number') {
+                charStrokeCountCache[char] = -1;
+            }
+            return { radical: charRadicalCache[char], strokes: charStrokeCountCache[char] };
+        }
+
+        // 確保多個漢字同時具備部首與筆畫數快取
+        async function ensureCharFullMetadata(chars) {
+            const validChars = chars.filter(c => /^[\u4e00-\u9fa5]$/.test(c));
+            if (validChars.length === 0) return false;
+            const missing = validChars.filter(c => typeof charRadicalCache[c] !== 'string' || typeof charStrokeCountCache[c] !== 'number');
+            if (missing.length === 0) return false;
+            await Promise.all(missing.map(c => fetchCharMetadata(c)));
+            return true;
+        }
+
+        // 依據台灣教育部部首與筆畫數，結合內建 MONSTER_ATTRIBUTE_RULES 計算屬系與攻擊力
+        function getMonsterStats(char) {
+            const moeEntry = MOE_DICT_MAP[char];
+            const strokes = moeEntry ? moeEntry.strokes : charStrokeCountCache[char];
+            const radical = normalizeRadical(moeEntry ? moeEntry.radical : (charRadicalCache[char] || '無'));
+            const elementKeys = ['fire', 'water', 'wood', 'metal', 'earth'];
+
+            let matchedRule = null;
+            for (const key of elementKeys) {
+                const rule = MONSTER_ATTRIBUTE_RULES[key];
+                if (rule && rule.radicals && radical && radical !== '無' && rule.radicals.includes(radical)) {
+                    matchedRule = rule;
+                    break;
+                }
+            }
+
+            // 只有 MONSTER_ATTRIBUTE_RULES 中有設定的部首才顯示對應屬性圖，沒有的顯示「無」系
+            const isInRules = Boolean(matchedRule);
+            const activeRule = matchedRule || MONSTER_ATTRIBUTE_RULES.defaultAttr;
+            const multiplier = typeof activeRule.multiplier === 'number' && activeRule.multiplier > 0 ? activeRule.multiplier : 1.0;
+            const hasValidStrokes = typeof strokes === 'number' && strokes > 0 && strokes < 999;
+            const atk = hasValidStrokes ? Math.round(strokes * 1000 * multiplier) : 0;
+
+            return {
+                attrName: activeRule.name,
+                attrIcon: isInRules ? activeRule.icon : '✨',
+                isInRules: isInRules,
+                elementDisplay: isInRules ? `${activeRule.icon}系` : '無系',
+                badgeClass: isInRules ? activeRule.badgeClass : 'bg-slate-100 text-slate-700 border-slate-300',
+                radical: radical,
+                strokes: hasValidStrokes ? strokes : null,
+                multiplier: multiplier,
+                atk: atk,
+                atkText: hasValidStrokes ? atk.toLocaleString() : '???'
+            };
+        }
+
+        // 更新訓練/挑戰或競賽畫面上方的怪獸屬性與戰力標籤
+        async function updateMonsterStatsBadge(char, targetElementId) {
+            const container = document.getElementById(targetElementId);
+            if (!container) return;
+
+            if (!char || !/^[\u4e00-\u9fa5]$/.test(char)) {
+                container.innerHTML = `
+                    <div class="bg-slate-100/90 border border-slate-300 text-slate-600 px-3 py-1 rounded-full text-xs sm:text-sm font-black flex items-center gap-2 shadow-2xs">
+                        <span>?部 ?畫</span>
+                        <span class="text-slate-300">|</span>
+                        <span>無系</span>
+                        <span class="text-slate-300">|</span>
+                        <span class="text-rose-600">⚔️ --</span>
+                    </div>
+                `;
+                return;
+            }
+
+            // 若不在內建常用字表中才顯示短暫偵測提示
+            if (!MOE_DICT_MAP[char] && !charRadicalCache[char]) {
+                container.innerHTML = `
+                    <div class="bg-slate-100/90 border border-slate-300 text-slate-500 px-3 py-1 rounded-full text-xs sm:text-sm font-black flex items-center gap-2 shadow-2xs">
+                        <span>🔍 偵測怪獸屬性中...</span>
+                    </div>
+                `;
+            }
+
+            await ensureCharFullMetadata([char]);
+            const stats = getMonsterStats(char);
+            const radicalDisplay = (stats.radical && stats.radical !== '無') ? `${stats.radical}部` : '?部';
+            const strokeDisplay = stats.strokes ? `${stats.strokes}畫` : '?畫';
+
+            container.innerHTML = `
+                <div class="${stats.badgeClass} border px-3 py-1 rounded-full text-xs sm:text-sm font-black flex items-center gap-2 shadow-2xs transition-all">
+                    <span>${radicalDisplay} ${strokeDisplay}</span>
+                    <span class="opacity-40">|</span>
+                    <span>${stats.elementDisplay}</span>
+                    <span class="opacity-40">|</span>
+                    <span class="text-rose-700">⚔️ ${stats.atkText}</span>
+                </div>
+            `;
+        }
+
+        // 從 Firebase 即時監聽並同步管理者維護的 monster_rules/default 部首屬性判斷表
+        window.loadCloudMonsterRules = async function() {
+            if (!window.db || !window.doc || !window.getDoc) return;
+
+            // 將字串或陣列自動拆解成不重複的單一漢字部首陣列
+            const parseRadicalList = (rawInput) => {
+                const chars = [];
+                const extract = (val) => {
+                    if (typeof val === 'string') {
+                        const matched = val.match(/[\u4e00-\u9fa5\u3400-\u4dbf\u2e80-\u2eff]/g);
+                        if (matched) chars.push(...matched);
+                    } else if (Array.isArray(val)) {
+                        val.forEach(extract);
+                    }
+                };
+                extract(rawInput);
+                return Array.from(new Set(chars));
+            };
+
+            const applyRulesSnapshot = (data) => {
+                if (!data || typeof data !== 'object') return;
+                const keys = ['fire', 'water', 'wood', 'metal', 'earth'];
+                keys.forEach(k => {
+                    if (data[k] && typeof data[k] === 'object') {
+                        MONSTER_ATTRIBUTE_RULES[k].radicals = data[k].radicals !== undefined ? parseRadicalList(data[k].radicals) : [];
+                        if (typeof data[k].multiplier === 'number' && data[k].multiplier > 0) {
+                            MONSTER_ATTRIBUTE_RULES[k].multiplier = data[k].multiplier;
+                        } else {
+                            MONSTER_ATTRIBUTE_RULES[k].multiplier = 1.0;
+                        }
+                    } else {
+                        MONSTER_ATTRIBUTE_RULES[k].radicals = [];
+                        MONSTER_ATTRIBUTE_RULES[k].multiplier = 1.0;
+                    }
+                });
+                if (typeof data.defaultMultiplier === 'number' && data.defaultMultiplier > 0) {
+                    MONSTER_ATTRIBUTE_RULES.defaultAttr.multiplier = data.defaultMultiplier;
+                } else {
+                    MONSTER_ATTRIBUTE_RULES.defaultAttr.multiplier = 1.0;
+                }
+                if (currentChar) updateMonsterStatsBadge(currentChar, 'learning-monster-stats');
+                if (isCompeting && compCurrentChar) updateMonsterStatsBadge(compCurrentChar, 'comp-monster-stats');
+                if (currentTab === 'vault') renderVaultGrid();
+            };
+
+            const primaryDocRef = window.doc(window.db, 'monster_rules', 'default');
+
+            if (window.onSnapshot && !monsterRulesUnsub) {
+                try {
+                    monsterRulesUnsub = window.onSnapshot(primaryDocRef, (snap) => {
+                        if (snap.exists()) {
+                            applyRulesSnapshot(snap.data());
+                        }
+                    }, (err) => {
+                        console.warn('即時監聽 monster_rules 失敗:', err);
+                    });
+                } catch (e) {
+                    console.warn('建立 monster_rules 監聽失敗:', e);
+                }
+            }
+
+            const candidateDocs = [
+                primaryDocRef,
+                window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'monster_rules', 'default')
+            ];
+
+            for (const docRef of candidateDocs) {
+                try {
+                    const snap = await window.getDoc(docRef);
+                    if (snap.exists()) {
+                        applyRulesSnapshot(snap.data());
+                        break;
+                    }
+                } catch (e) {
+                    console.warn('讀取雲端屬性判斷表失敗:', e);
+                }
+            }
+        };
 
         // 依據累計獲得的星星總數回傳 10 階稱號徽章（由高到低）
         function getVaultLevelBadge(totalStars) {
@@ -659,11 +1326,11 @@
             if (totalStars >= 300) return '漢字統帥 🎖️';
             if (totalStars >= 210) return '漢字將軍 ⚔️';
             if (totalStars >= 150) return '漢字英雄 🦸';
-            if (totalStars >= 100) return '漢字大俠 🥷';
-            if (totalStars >= 60) return '漢字高手 🔥';
-            if (totalStars >= 35) return '漢字小學者 🎓';
-            if (totalStars >= 18) return '漢字小達人 ✨';
-            if (totalStars >= 6) return '漢字小新星 🌟';
+            if (totalStars >= 100) return '漢字宗師 🐉';
+            if (totalStars >= 65) return '漢字大師 🏆';
+            if (totalStars >= 40) return '漢字達人 🔥';
+            if (totalStars >= 20) return '漢字好手 🌟';
+            if (totalStars >= 8) return '漢字學徒 📘';
             return '漢字小菜鳥 🐣';
         }
 
@@ -689,26 +1356,9 @@
             return { totalStars, starCounts };
         }
 
-        // 查詢並快取各漢字筆畫數以利星等分級與排序
+        // 查詢並快取各漢字筆畫數（優先透過萌典 Moedict API 取得筆畫與部首）
         async function ensureCharStrokeCounts(chars) {
-            const missing = chars.filter(c => typeof charStrokeCountCache[c] !== 'number');
-            if (missing.length === 0) return false;
-            let updated = false;
-            await Promise.all(missing.map(async (c) => {
-                try {
-                    const data = await HanziWriter.loadCharacterData(c);
-                    if (data && Array.isArray(data.strokes) && data.strokes.length > 0) {
-                        charStrokeCountCache[c] = data.strokes.length;
-                    } else {
-                        charStrokeCountCache[c] = -1;
-                    }
-                    updated = true;
-                } catch (e) {
-                    charStrokeCountCache[c] = -1;
-                    updated = true;
-                }
-            }));
-            return updated;
+            return await ensureCharFullMetadata(chars);
         }
 
         // 顯示登入或系統提示橫幅
@@ -936,6 +1586,7 @@
             writer = null;
             initWriter(char);
             updatePromptByInput();
+            updateMonsterStatsBadge(char, 'learning-monster-stats');
         }
 
         function triggerChallengeRedFlash() {
@@ -962,6 +1613,7 @@
                     width: gridWidth,
                     height: gridWidth,
                     padding: 15,
+                    charDataLoader: twMoeCharDataLoader,
                     strokeAnimationSpeed: strokeSpeed,
                     delayBetweenStrokes: 200,
                     strokeColor: '#2C3E50',
@@ -1078,6 +1730,7 @@
             compCompletedStrokes = 0;
             compCurrentChar = compWordBank.pop();
             updateCompFeedback(`總共3次錯誤機會 ｜ 累計錯誤 ${compMistakes} / 3 次`);
+            updateMonsterStatsBadge(compCurrentChar, 'comp-monster-stats');
             initCompWriter(compCurrentChar);
         }
 
@@ -1093,6 +1746,7 @@
                     width: gridWidth,
                     height: gridWidth,
                     padding: 15,
+                    charDataLoader: twMoeCharDataLoader,
                     strokeAnimationSpeed: 1,
                     delayBetweenStrokes: 200,
                     strokeColor: '#2C3E50',
@@ -1178,7 +1832,7 @@
             container.innerHTML = '';
 
             // 載入字形筆畫資料，將已完成筆畫渲染為黑色，未完成筆畫渲染為紅色
-            HanziWriter.loadCharacterData(compCurrentChar).then(charData => {
+            HanziWriter.loadCharacterData(compCurrentChar, { charDataLoader: twMoeCharDataLoader }).then(charData => {
                 if (!charData || !charData.strokes) return;
                 const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
                 svg.setAttribute('width', gridWidth);
@@ -1402,10 +2056,10 @@
             const legendCountEl = document.getElementById('vault-legend-count');
             if (legendCountEl) legendCountEl.innerText = `👑 ${starCounts[5] || 0} 隻`;
 
-            // 若還有字尚未取得筆畫數，先非同步查詢完成後自動重繪與同步雲端星數
-            const hasPending = arr.some(c => typeof charStrokeCountCache[c] !== 'number');
+            // 若還有字尚未取得筆畫數或部首，先非同步查詢完成後自動重繪與同步雲端星數
+            const hasPending = arr.some(c => typeof charStrokeCountCache[c] !== 'number' || typeof charRadicalCache[c] !== 'string');
             if (hasPending) {
-                ensureCharStrokeCounts(arr).then(async (updated) => {
+                ensureCharFullMetadata(arr).then(async (updated) => {
                     if (updated) {
                         await syncVaultLeaderboardRecord();
                         if (currentTab === 'vault') renderVaultGrid();
@@ -1486,12 +2140,21 @@
                     });
 
                 const cardsHtml = items.length > 0
-                    ? `<div class="grid grid-cols-5 sm:grid-cols-6 gap-2 pt-1">
-                        ${items.map(char => `
-                            <div onclick="previewVaultChar('${char}')" class="btn-3d ${sec.cardClass} relative p-1 rounded-xl aspect-square flex items-center justify-center cursor-pointer hover:brightness-105 transition-transform">
-                                <div class="vault-brush-font text-3xl sm:text-4xl ${sec.textClass} select-none">${char}</div>
+                    ? `<div class="grid grid-cols-4 sm:grid-cols-5 gap-2 pt-1">
+                        ${items.map(char => {
+                            const stats = getMonsterStats(char);
+                            return `
+                            <div onclick="previewVaultChar('${char}')" class="btn-3d ${sec.cardClass} relative p-1.5 rounded-xl flex flex-col items-center justify-between cursor-pointer hover:brightness-105 transition-transform min-h-[88px] sm:min-h-[96px]">
+                                <div class="w-full flex items-center justify-between text-[11px] sm:text-xs font-black leading-none">
+                                    <span class="bg-white/85 px-1.5 py-0.5 rounded-md shadow-2xs" title="${stats.attrName}屬性（部首：${stats.radical}）">${stats.attrIcon}</span>
+                                    <span class="text-[10px] font-bold opacity-75 ${sec.textClass}">${stats.radical}部</span>
+                                </div>
+                                <div class="vault-brush-font text-3xl sm:text-4xl ${sec.textClass} select-none my-0.5">${char}</div>
+                                <div class="w-full bg-slate-900/80 text-amber-200 text-[10px] sm:text-[11px] font-black px-1 py-0.5 rounded-md text-center tracking-tight truncate">
+                                    ⚔️ ${stats.atkText}
+                                </div>
                             </div>
-                        `).join('')}
+                        `;}).join('')}
                        </div>`
                     : `<div class="text-center text-[11px] font-bold text-slate-400 py-2">${sec.emptyText}</div>`;
 
@@ -1557,6 +2220,7 @@
             clearUserCanvas();
             writer = null;
             updatePromptByInput();
+            updateMonsterStatsBadge('', 'learning-monster-stats');
         }
 
         function animateCharacter() {
